@@ -149,11 +149,7 @@ void renderRoad(int i) {
     }
 }
 
-void renderSave(int i) {
-    if (g_no_render)
-        return;
-
-}
+extern "C" void renderSave(int i);
 
 void generateCars(int i) {
     if (g_static_render)
