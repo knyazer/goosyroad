@@ -108,6 +108,22 @@ void drawCar(int i) {
 
 }
 
+void drawCars(int low, int high) {
+    for (int i = 0; i < carsSize; i++) {
+        if (cars[i].exist && low <= cars[i].row && cars[i].row < high) {
+            drawCar(i);
+        }
+    }
+}
+
+void drawRocks(int low, int high) {
+    for (int i = 0; i < rocksSize; i++) {
+        if (low <= rocks[i].row && rocks[i].row < high) {
+            drawRock(i);
+        }
+    }
+}
+
 void removeCar(int i) {
     if (g_static_render)
         return;
@@ -131,23 +147,12 @@ void renderRoad(int i) {
         SDL_RenderCopy(renderer, roadTexture, 0, &rect);
         rect.x += rect.w;
     }
-
-    for (int j = 0; j < carsSize; j++) {
-        if (cars[j].row == i && cars[j].exist) {
-            drawCar(j);
-        }
-    }
 }
 
 void renderSave(int i) {
     if (g_no_render)
         return;
 
-    for (int j = 0; j < rocksSize; j++) {
-        if (rocks[j].row == i) {
-            drawRock(j);
-        }
-    }
 }
 
 void generateCars(int i) {
@@ -167,18 +172,16 @@ void generateCars(int i) {
                     break;
                 }
 
-                if (rowType[i] == ROADL) {
-                    float d = 1.4 * horizontalResolution - cars[j].position;
-                    float t = d / cars[j].speed;
-                    float v = (1.4 * horizontalResolution) / t;
-                    maxSpeed = std::min(maxSpeed, v);
-                }
-                else {
-                    float d = cars[j].position + 0.4 * horizontalResolution;
-                    float t = d / cars[j].speed;
-                    float v = (1.4 * horizontalResolution) / t;
-                    maxSpeed = std::min(maxSpeed, v);
-                }
+                float d;
+                if (rowType[i] == ROADL)
+                    d = 1.4 * horizontalResolution - cars[j].position;
+                else
+                    d = cars[j].position + 0.4 * horizontalResolution;
+
+
+                float t = d / cars[j].speed;
+                float v = (1.4 * horizontalResolution) / t;
+                maxSpeed = std::min(maxSpeed, v);
             }
         }
 
@@ -337,7 +340,9 @@ int drawGame() {
     }
 
     bool blocked = cameraAndPlayerUpdate();
-    for (int i = currentRow + numberOfRowsToDraw + 2; i > currentRow - 1; i--) {
+
+    int l = currentRow - 1, h = currentRow + numberOfRowsToDraw + 2;
+    for (int i = h; i > l; i--) {
         if (rowType[i] == SAVE)
             renderSave(i);
 
@@ -345,6 +350,9 @@ int drawGame() {
             renderRoad(i);
         }
     }
+
+    drawCars(l, h);
+    drawRocks(l, h);
 
     for (int i = currentRow + numberOfRowsToDraw * 3 + 2; i > currentRow - 1; i--) {
         if (rowType[i] == ROADL || rowType[i] == ROADR) {
