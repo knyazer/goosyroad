@@ -49,23 +49,36 @@ int carsFirstEmpty; // pointer to the first empty space in an array of cars
 Car cars[carsSize];
 Rock rocks[rocksSize];
 
-// searches for the first empty space in an array of cars, and sets the return value to its index
-int addCar() {
-    for (int i = carsFirstEmpty; i < carsSize; i++) {
-        if (!cars[i].exist) {
-            carsFirstEmpty = i + 1;
-            return i;
-        }
-    }
-
-    for (int i = 0; i <= carsFirstEmpty; i++)
-        if (!cars[i].exist) {
-            carsFirstEmpty = i + 1;
-            return i;
-        }
-
-    return -1;
+extern "C" Car* getCars() {
+    return cars;
 }
+
+extern "C" int getCarsFirstEmpty() {
+    return carsFirstEmpty;
+}
+
+extern "C" void setCarsFirstEmpty(int i) {
+    carsFirstEmpty = i;
+}
+
+// searches for the first empty space in an array of cars, and sets the return value to its index
+// int addCar() {
+//     for (int i = carsFirstEmpty; i < carsSize; i++) {
+//         if (!cars[i].exist) {
+//             carsFirstEmpty = i + 1;
+//             return i;
+//         }
+//     }
+
+//     for (int i = 0; i <= carsFirstEmpty; i++)
+//         if (!cars[i].exist) {
+//             carsFirstEmpty = i + 1;
+//             return i;
+//         }
+
+//     return -1;
+// }
+extern "C" int addCar();
 
 #define SAVE 0
 #define ROADL 1
