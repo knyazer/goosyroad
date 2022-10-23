@@ -61,23 +61,14 @@ extern "C" void setCarsFirstEmpty(int i) {
     carsFirstEmpty = i;
 }
 
-// searches for the first empty space in an array of cars, and sets the return value to its index
-// int addCar() {
-//     for (int i = carsFirstEmpty; i < carsSize; i++) {
-//         if (!cars[i].exist) {
-//             carsFirstEmpty = i + 1;
-//             return i;
-//         }
-//     }
+extern "C" int getGNoRender() {
+    return g_no_render;
+}
 
-//     for (int i = 0; i <= carsFirstEmpty; i++)
-//         if (!cars[i].exist) {
-//             carsFirstEmpty = i + 1;
-//             return i;
-//         }
+extern "C" int getGStaticRender() {
+    return g_static_render;
+}
 
-//     return -1;
-// }
 extern "C" int addCar();
 
 #define SAVE 0
@@ -137,14 +128,7 @@ void drawRocks(int low, int high) {
     }
 }
 
-void removeCar(int i) {
-    if (g_static_render)
-        return;
-
-    cars[i].exist = false;
-    if (carsFirstEmpty > i)
-        carsFirstEmpty = i;
-}
+extern "C" void removeCar(int i);
 
 void renderRoad(int i) {
     if (g_no_render)
