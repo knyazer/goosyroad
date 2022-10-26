@@ -4,12 +4,13 @@
 .text
     // Defining consts
     carsSize:   .quad 100
-    rockSize:   .quad 1000
+    rocksSize:   .quad 1000
     
     // Setting Globals
     .global renderSave
     .global addCar
     .global removeCar
+    .global drawRocks
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
@@ -132,4 +133,57 @@ removeCarEnd:
     popq    %rbp
     ret
 
+// void drawRocks(int low, int high);
+drawRocks:
+    pushq   %rbp                    # prologue
+    movq    %rsp, %rbp
+
+    pushq   %r12                    # push callee-saved
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+    movq    %rdi, %r14              # move low into r14
+    movq    %rsi, %r15              # move high into r15
+
+    movq    $0, %r12                # r12 will be the counter
+    call    getRocks                # rock has a size of 12 bytes, 3 ints (row, pos, type)
+    movq    %rax, %r13              # r13 now holds rocks[0] pointer
+
+drawRocksLoop:
+
+    cmpq    rocksSize, %r12         # if r12 is greater than or equal to rocksSize
+    jge     drawRocksEnd            # 
+
+
+firstDrawRocksAnd:
+    cmpl    %r14d, (%r13)
+    jl      drawRocksLoopContinue
+
+
+secondDrawRocksAnd:
+    cmpl    %r15d, (%r13)
+    jge     drawRocksLoopContinue
+
+    movq    %r12, %rdi
+    call    drawRock
+
+drawRocksLoopContinue:
+    addq    $12, %r13
+
+    inc     %r12
+    jmp     drawRocksLoop
+
+drawRocksEnd:
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
+
 // funcs.h methods
+

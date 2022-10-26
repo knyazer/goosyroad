@@ -4,7 +4,6 @@
 
 #include "funcs.h"
 
-
 #ifndef CROOSYROAD_GAMEPLAY_H
 #define CROOSYROAD_GAMEPLAY_H
 
@@ -53,6 +52,10 @@ extern "C" Car* getCars() {
     return cars;
 }
 
+extern "C" Rock* getRocks() {
+    return rocks;
+}
+
 extern "C" int getCarsFirstEmpty() {
     return carsFirstEmpty;
 }
@@ -75,7 +78,7 @@ extern "C" int addCar();
 #define ROADL 1
 #define ROADR 2
 
-void drawRock(int i) {
+extern "C" void drawRock(int i) {
     if (g_no_render)
         return;
 
@@ -120,13 +123,7 @@ void drawCars(int low, int high) {
     }
 }
 
-void drawRocks(int low, int high) {
-    for (int i = 0; i < rocksSize; i++) {
-        if (low <= rocks[i].row && rocks[i].row < high) {
-            drawRock(i);
-        }
-    }
-}
+extern "C" void drawRocks(int low, int high);
 
 extern "C" void removeCar(int i);
 
