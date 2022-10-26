@@ -11,6 +11,7 @@
     .global addCar
     .global removeCar
     .global drawRocks
+    .global drawCars
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
@@ -184,6 +185,58 @@ drawRocksEnd:
     popq    %rbp
 
     ret
+
+drawCars:
+    pushq   %rbp                    # prologue
+    movq    %rsp, %rbp
+
+    pushq   %r12                    # push callee-saved
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+    movq    %rdi, %r14              # move low into r14
+    movq    %rsi, %r15              # move high into r15
+
+    movq    $0, %r12                # r12 will be the counter
+    call    getCars                 # rock has a size of 12 bytes, 3 ints (row, pos, type)
+    movq    %rax, %r13              # r13 now holds rocks[0] pointer
+
+drawCarsLoop:
+
+    cmpq    carsSize, %r12         # if r12 is greater than or equal to rocksSize
+    jge     drawCarsEnd            # 
+
+
+firstDrawCarsAnd:
+    cmpl    %r14d, (%r13)
+    jl      drawCarsLoopContinue
+
+
+secondDrawCarsAnd:
+    cmpl    %r15d, (%r13)
+    jge     drawCarsLoopContinue
+
+    movq    %r12, %rdi
+    call    drawCar
+
+drawCarsLoopContinue:
+    addq    $24, %r13
+
+    inc     %r12
+    jmp     drawCarsLoop
+
+drawCarsEnd:
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
+
 
 // funcs.h methods
 

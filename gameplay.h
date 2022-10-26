@@ -29,12 +29,12 @@ SDL_Texture* carTexturesR[1], *carTexturesL[1], *rockTextures[6];
 SDL_Texture* roadTexture;
 
 struct Car {
-    int row;
+    int row; // 4 bytes
     float position; // 0-horizontalResolution
-    int type;
-    float speed;
-    float width;
-    bool exist;
+    int type; // 12 bytes
+    float speed; // 16 bytes
+    float width; // 20 bytes
+    bool exist; // 24 bytes
 };
 
 struct Rock {
@@ -93,7 +93,7 @@ extern "C" void drawRock(int i) {
     SDL_RenderCopy(renderer, rockTextures[rocks[i].type], NULL, &rect);
 }
 
-void drawCar(int i) {
+extern "C" void drawCar(int i) {
     if (g_no_render)
         return;
 
@@ -115,13 +115,7 @@ void drawCar(int i) {
 
 }
 
-void drawCars(int low, int high) {
-    for (int i = 0; i < carsSize; i++) {
-        if (cars[i].exist && low <= cars[i].row && cars[i].row < high) {
-            drawCar(i);
-        }
-    }
-}
+extern "C" void drawCars(int low, int high);
 
 extern "C" void drawRocks(int low, int high);
 
