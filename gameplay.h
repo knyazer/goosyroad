@@ -48,31 +48,39 @@ int carsFirstEmpty; // pointer to the first empty space in an array of cars
 Car cars[carsSize];
 Rock rocks[rocksSize];
 
-extern "C" Car* getCars() {
-    return cars;
-}
+extern "C" Car* getCars() { return cars; }
 
-extern "C" Rock* getRocks() {
-    return rocks;
-}
+extern "C" Rock* getRocks() { return rocks; }
 
-extern "C" int getCarsFirstEmpty() {
-    return carsFirstEmpty;
-}
+extern "C" int getCarsFirstEmpty() { return carsFirstEmpty; }
 
-extern "C" void setCarsFirstEmpty(int i) {
-    carsFirstEmpty = i;
-}
+extern "C" void setCarsFirstEmpty(int i) { carsFirstEmpty = i; }
 
-extern "C" int getGNoRender() {
-    return g_no_render;
-}
+extern "C" int getGNoRender() { return g_no_render; }
 
-extern "C" int getGStaticRender() {
-    return g_static_render;
-}
+extern "C" int getGStaticRender() { return g_static_render; }
+
+extern "C" int getGHeight() { return g_height; }
+
+extern "C" int getNumberOfRowsToDraw() { return numberOfRowsToDraw; } 
+
+extern "C" int getGWidth() { return g_width; }
+
+extern "C" SDL_Renderer* getRenderer() { return renderer; }
+
+extern "C" SDL_Texture* getRoadTexture() { return roadTexture; } 
 
 extern "C" int addCar();
+
+extern "C" void drawCars(int low, int high);
+
+extern "C" void drawRocks(int low, int high);
+
+extern "C" void removeCar(int i);
+
+extern "C" void renderSave(int i);
+
+extern "C" void renderRoad(int i);
 
 #define SAVE 0
 #define ROADL 1
@@ -115,29 +123,9 @@ extern "C" void drawCar(int i) {
 
 }
 
-extern "C" void drawCars(int low, int high);
-
-extern "C" void drawRocks(int low, int high);
-
-extern "C" void removeCar(int i);
-
-void renderRoad(int i) {
-    if (g_no_render)
-        return;
-
-    SDL_Rect rect;
-    rect.x = 0;
-    rect.y = (numberOfRowsToDraw - (i - currentRow) - 0.5) * (g_height / numberOfRowsToDraw);
-    rect.h = g_height / numberOfRowsToDraw;
-    rect.w = rect.h;
-
-    while (rect.x < g_width) {
-        SDL_RenderCopy(renderer, roadTexture, 0, &rect);
-        rect.x += rect.w;
-    }
+extern "C" int getRectY(int i) {
+    return (numberOfRowsToDraw - (i - currentRow) - 0.5) * (g_height / numberOfRowsToDraw);
 }
-
-extern "C" void renderSave(int i);
 
 void generateCars(int i) {
     if (g_static_render)

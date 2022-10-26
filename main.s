@@ -204,7 +204,7 @@ drawCars:
 
 drawCarsLoop:
 
-    cmpq    carsSize, %r12         # if r12 is greater than or equal to rocksSize
+    cmpq    carsSize, %r12         # if r12 is greater than or equal to carsSize
     jge     drawCarsEnd            # 
 
 
@@ -237,6 +237,91 @@ drawCarsEnd:
 
     ret
 
+.global renderRoad
+
+renderRoad:
+    pushq   %rbp                    # prologue
+    movq    %rsp, %rbp
+
+    pushq   %r12                    # push callee-saved
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+    movq    %rdi, %r14              # move i into r14
+
+renderRoadGNoRenderCheck:           # if (g_no_render) { return; }
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     renderRoadEnd
+
+renderRoadBody:
+    # SDL_Rect has a size of 16 bytes (4 ints)
+    # creating SDL_Rect rect;
+    movq    $16, %rdi
+    call    malloc
+
+    movq    %rax, %r15          # saving pointer to that malloc in r15
+    movl    $0, (%r15)          # moving 0 to first int
+
+    movq    %r14, %rdi          # proving int i for getRectY()
+    call    getRectY
+    movl    %eax, 4(%r15)       # moving result of getRectY to rax+4 (meaning rect.y)
+
+    # r15 = pointer to rect
+    movq    $0, %rdx            # because rdx is also used during division and I hate floating point exception
+    call    getNumberOfRowsToDraw
+    movq    %rax, %r14          # move numberOfRowsToDraw to r14
+    call    getGHeight          # g_height in rax
+
+    div     %r14                # result of division in rax
+    movl    %eax, 12(%r15)      # moving result of division to rect.h
+    movl    %eax, 8(%r15)       # moving same value to rect.w (because, that is kinda what you do)
+
+    call    getGWidth
+
+    # r15 = rect (address)
+    # r14 = lets make that renderer
+    call    getRenderer
+    movq    %rax, %r14          # SDL_Renderer* renderer in r14 now
+    # r13 = roadTexture
+    call    getRoadTexture
+    movq    %rax, %r13          # SDL_Texture* roadTexture in r13 now
+
+    call    getGWidth
+    movq    %rax, %r12
+    movq    $0, %rdi
+renderRoadWhile:
+    cmpl    %r12d, (%r15)        # compare rect.x and g_width
+    jge     renderRoadEnd       # if rect.x is greater or equal to g_width, end the function (while loop)
+
+    movq    %r14, %rdi
+    movq    %r13, %rsi
+    movq    $0, %rdx
+    movq    %r15, %rcx
+    call    SDL_RenderCopy
+
+    movl    8(%r15), %edi
+    addl    (%r15), %edi
+checking:
+    movl    %edi, (%r15)
+
+    jmp     renderRoadWhile
+
+renderRoadEnd:
+    # cannot free the memory - could this become a problem?, should we check this out?
+    # movq    %r15, %rdi
+    # call    free
+
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
 
 // funcs.h methods
 
