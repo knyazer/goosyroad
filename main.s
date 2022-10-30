@@ -12,10 +12,107 @@
     .global removeCar
     .global drawRocks
     .global drawCars
+    .global drawRock
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
 // gameplay.h methods
+
+drawRock:
+    pushq   %rbp
+    movq    %rsp, %rbp
+
+    pushq   %r12
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+
+    movq    %rdi, %r14          # int i now in r14
+    movq    %rdi, %r15          # r15 = i 
+
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     drawRockEnd
+
+    call    getHorizontalResolution
+    movq    %rax, %r12
+
+    call    getGWidth
+    movq    $0, %rdx
+    divq    %r12
+    # the step is now in rax
+    movq    %rax, %r13          # the  step is now r13
+
+    shlq    $1, %rax            # multiply rax by 2
+
+    movq    $0, %rdx
+    movq    $3, %r12
+    divq    %r12
+    # size is now in rax
+    movq    %rax, %r12          # size is now in r12
+
+    # making space on the stack for SDL_Rect
+    subq    $16, %rsp
+
+    movq    $12, %rax
+    mulq    %r14
+    movq    %rax, %r14  # r14 = i * 12
+    # r12 = size, r13 = step, r14 = i * sizeof Rock
+    # rect.x = (rocks[i].position * step) - (size / 2);
+    shrq    %r12                # r12 = size / 2
+
+    call    getRocks
+    addq    $4, %rax            # rax = rocks[0].position
+    movq    (%rax, %r14), %rax  # rax = rocks[i].position
+
+    mulq    %r13                # rax = (rocks[i].position * step)
+    subq    %r12, %rax          # rax = (rocks[i].position * step) - (size / 2)
+
+    movl    %eax, (%rsp)
+
+    shlq    %r12
+    # r12 = size, r14 = i * 12
+    # rect. y = ((numRows - (rocks[i].row - currentRow)) * (g_height / numberRows)) - size / 2
+
+    movq    %r15, %rdi
+    movq    %r12, %rsi
+    call    getCorrectRockDrawY
+    
+    movl    %eax, 4(%rsp)
+
+    movl    %r12d, 8(%rsp)          # rect.w (or rect.h is doesn't matter, both the same)
+    movl    %r12d, 12(%rsp)         # = size
+
+    call    getRenderer
+    movq    %rax, %r13              # SDL_Renderer* renderer in r13
+
+    call    getRocks
+    addq    $8, %rax                # add 8 to get .type
+    movq    (%rax, %r14), %rdi      # r14 = i * 12, therefore rocks[i].type
+    # r14 = rocks[i].type, r13 = renderer
+
+    call    getCorrectRockTextureWithI
+    movq    %rax, %rsi
+    movq    %r13, %rdi
+
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    
+    call    SDL_RenderCopy
+
+    addq    $16, %rsp
+
+drawRockEnd:
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+    ret
+
 renderSave:
     ret
 
@@ -309,9 +406,9 @@ checking:
     jmp     renderRoadWhile
 
 renderRoadEnd:
-    # cannot free the memory - could this become a problem?, should we check this out?
-    # movq    %r15, %rdi
-    # call    free
+    // cannot free the memory - could this become a problem?, should we check this out?
+    // movq    %r15, %rdi
+    // call    free
 
     popq    %r15
     popq    %r14

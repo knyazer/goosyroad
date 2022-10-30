@@ -49,15 +49,12 @@ Car cars[carsSize];
 Rock rocks[rocksSize];
 
 extern "C" Car* getCars() { return cars; }
-
 extern "C" Rock* getRocks() { return rocks; }
 
 extern "C" int getCarsFirstEmpty() { return carsFirstEmpty; }
-
 extern "C" void setCarsFirstEmpty(int i) { carsFirstEmpty = i; }
 
 extern "C" int getGNoRender() { return g_no_render; }
-
 extern "C" int getGStaticRender() { return g_static_render; }
 
 extern "C" int getGHeight() { return g_height; }
@@ -71,41 +68,39 @@ extern "C" SDL_Renderer* getRenderer() { return renderer; }
 extern "C" SDL_Texture* getRoadTexture() { return roadTexture; } 
 
 extern "C" int addCar();
-
 extern "C" void drawCars(int low, int high);
-
 extern "C" void drawRocks(int low, int high);
-
 extern "C" void removeCar(int i);
-
 extern "C" void renderSave(int i);
-
 extern "C" void renderRoad(int i);
+
+extern "C" int getHorizontalResolution() { return horizontalResolution; }
+
+extern "C" int getCurrentRow() { return currentRow; }
+
+extern "C" SDL_Texture** getRockTextures() { return rockTextures; }
 
 #define SAVE 0
 #define ROADL 1
 #define ROADR 2
 
-extern "C" void drawRock(int i) {
-    if (g_no_render)
-        return;
+extern "C" SDL_Texture* getCorrectRockTextureWithI(int i) { return rockTextures[i]; }
 
-    int step = g_width / horizontalResolution;
-    int size = step * 2 / 3;
-    SDL_Rect rect;
-    rect.x = rocks[i].position * step - size / 2;
-    rect.y = (numberOfRowsToDraw - (rocks[i].row - currentRow)) * (g_height / numberOfRowsToDraw) - size / 2;
-    rect.w = size;
-    rect.h = size;
-
-    SDL_RenderCopy(renderer, rockTextures[rocks[i].type], NULL, &rect);
+extern "C" int getCorrectRockDrawY(int i, int size) {
+    return ((numberOfRowsToDraw - (rocks[i].row - currentRow)) * (g_height / numberOfRowsToDraw)) - size / 2;
 }
+extern "C" void drawRock(int i);
 
+extern "C" int getCarX(int i) { return (cars[i].position * float(g_width) / horizontalResolution); }
+extern "C" int getCarY(int i, int h) { return (numberOfRowsToDraw - (cars[i].row - currentRow)) * (g_height / numberOfRowsToDraw) - h / 2;}
+extern "C" int getCarsRowType(int i) { return rowType[cars[i].row]; }
+extern "C" SDL_Texture* getCarTextureR(int i) { return carTexturesR[cars[i].type]; }
+extern "C" SDL_Texture* getCarTextureL(int i) { return carTexturesL[cars[i].type]; }
 extern "C" void drawCar(int i) {
     if (g_no_render)
         return;
 
-    int h = (g_height / numberOfRowsToDraw) * 2 / 3;
+    int h = ((g_height / numberOfRowsToDraw) * 2) / 3;
     int w = (g_width / horizontalResolution) * cars[i].width;
 
     SDL_Rect rect;
