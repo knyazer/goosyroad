@@ -97,34 +97,13 @@ extern "C" int getCorrectRockDrawY(int i, int size) {
     return ((numberOfRowsToDraw - (rocks[i].row - currentRow)) * (g_height / numberOfRowsToDraw)) - size / 2;
 }
 extern "C" void drawRock(int i);
-
 extern "C" int getCarX(int i) { return (cars[i].position * float(g_width) / horizontalResolution); }
 extern "C" int getCarY(int i, int h) { return (numberOfRowsToDraw - (cars[i].row - currentRow)) * (g_height / numberOfRowsToDraw) - h / 2;}
 extern "C" int getCarsRowType(int i) { return rowType[cars[i].row]; }
 extern "C" SDL_Texture* getCarTextureR(int i) { return carTexturesR[cars[i].type]; }
 extern "C" SDL_Texture* getCarTextureL(int i) { return carTexturesL[cars[i].type]; }
 
-extern "C" void drawCar(int i) {
-    if (g_no_render)
-        return;
-
-    int h = ((g_height / numberOfRowsToDraw) * 2) / 3;
-    int w = (g_width / horizontalResolution) * cars[i].width;
-
-    SDL_Rect rect;
-    rect.x = cars[i].position * float(g_width) / horizontalResolution;
-    rect.y = (numberOfRowsToDraw - (cars[i].row - currentRow)) * (g_height / numberOfRowsToDraw) - h / 2;
-    rect.w = w;
-    rect.h = h;
-
-    if (rowType[cars[i].row] == ROADL) {
-        SDL_RenderCopy(renderer, carTexturesL[cars[i].type], 0, &rect);
-    }
-    else if (rowType[cars[i].row] == ROADR) {
-        SDL_RenderCopy(renderer, carTexturesR[cars[i].type], 0, &rect);
-    }
-
-}
+extern "C" void drawCar(int i);
 
 extern "C" int getRectY(int i) {
     return (numberOfRowsToDraw - (i - currentRow) - 0.5) * (g_height / numberOfRowsToDraw);

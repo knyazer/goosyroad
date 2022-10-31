@@ -15,12 +15,132 @@
     .global drawRock
     .global renderPlayer
     .global updateCar
+    .global drawCar
 
     ROADL:  .quad   1
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
 // gameplay.h methods
+drawCar:
+    pushq   %rbp
+    movq    %rsp, %rbp
+    
+    pushq   %r12
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+    pushq   %rbx
+
+    movq    %rdi, %r12      #//! r12 = i
+    movq    %rdi, %rbx
+
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     drawCarEnd
+
+    movq    $24, %rax   # 24 into rax
+    mulq    %r12        # rax = 24 * i  
+    movq    %rax, %r13  # r13 = 24 * i
+    call    getCars
+    addq    %rax, %r13  # cars pointer + 24 * i
+                        #//! r13 = cars[i] (mem_address)
+    
+    call    getNumberOfRowsToDraw
+    movq    %rax, %r14  #//! r14 = numberOfRowsToDraw
+    call    getGHeight
+    movq    $0, %rdx
+    divq    %r14    
+    shlq    %rax
+    movq    $3, %rcx
+    movq    $0, %rdx
+    divq    %rcx
+    movq    %rax, %r15  #//! r15 = h
+
+    call    getHorizontalResolution
+    movq    %rax, %r14
+
+    call    getGWidth
+    movq    $0, %rdx
+    divq    %r14
+    cvtsi2ss %rax, %xmm0    #//! xmm0 = g_width / horizontalRes
+
+    movl    16(%r13) ,%eax
+    subq    $16, %rsp
+    // movq    $0, (%rsp)
+    // movq    $0, 8(%rsp)
+    movl    %eax, (%rsp)
+    movss   (%rsp), %xmm1
+    mulss   %xmm0, %xmm1
+    cvtss2si %xmm1, %rax # rax = w
+    movq    %rax, %r12  #//! r12 = w
+
+    # space on stack already allocated, so we all good
+    # (for SDL_Rect rect;)
+    movl    4(%r13), %r8d
+    movl    %r8d, (%rsp)
+    movss   (%rsp), %xmm1   # xmm1 = cars[i].position
+
+    mulss   %xmm0, %xmm1    # xmm1 = xmm1(cars[i].pos) * xmm0 (g_width/horizontal)
+    cvtss2si %xmm1, %r8
+    movl    %r8d, (%rsp)    #//! rect.x = equation
+    
+    movq    %rbx, %rdi
+    movq    %r15, %rsi
+    call    getCarY
+    movl    %eax, 4(%rsp)
+
+    movl    %r12d, 8(%rsp)
+    movl    %r15d, 12(%rsp)
+    
+    call    getRowType
+    movq    %rax, %r15  #//! r15 = rowType*
+
+    call    getRenderer
+    movq    %rax, %r12  #//! renderer in r12
+
+    movl    (%r13), %r13d    #//! r13 = cars[i].row
+    movl    (%r15, %r13, 4), %r13d
+
+    cmpl    $1, %r13d
+    # check if equal to ROADL
+    jne     drawCarRoadR
+
+    movq    %rbx, %rdi
+    call    getCarTextureL
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+    jmp     drawCarEnd
+
+drawCarRoadR:
+    cmpl    $2, %r13d
+    # check if equal to ROADR
+    jne     drawCarEnd
+
+    movq    %rbx, %rdi
+    call    getCarTextureR
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+drawCarEnd:
+    addq    $16, %rsp
+    popq    %rbx
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
+
 renderPlayer:
     pushq   %rbp
     movq    %rsp, %rbp
@@ -217,7 +337,6 @@ updateCarLoop:
     mulq    %rcx
     addq    %r13, %rax              #//! rax = cars[j] (mem address)
 
-loopCalled:
     ## if (cars[j].row == i && cars[j].exist)
     cmpl    (%rax), %r12d
     jne     updateCarLoopContinue
@@ -228,11 +347,10 @@ loopCalled:
     ## so basically I will take the speed, and flip the sign bit of
     ## it works, and add that to the position
     movl    $0x80000000, %r8d
-    cmpq    $1, (%r14, %r12, 4)
+    cmpq    $1, (%r14, %r12, 4) #Compare to ROADL
     cmove   %r9, %r8
     xorl    12(%rax), %r8d
 
-carBefore: 
     # reserve 32 byes on stack
     subq    $32, %rsp
     movq    $0, (%rsp)
@@ -253,8 +371,6 @@ carBefore:
 
     movl    (%rsp), %r10d
     movl    %r10d, 4(%rax)
-
-carAfter:
 
     addq    $32, %rsp
 
