@@ -59,6 +59,11 @@ extern "C" int getGStaticRender() { return g_static_render; }
 
 extern "C" int getGHeight() { return g_height; }
 
+extern "C" SDL_Texture* getHeroR() { return heroR; }
+extern "C" SDL_Texture* getHeroSR() { return heroSR; }
+extern "C" SDL_Texture* getHeroL() { return heroL; }
+extern "C" SDL_Texture* getHeroSL() { return heroSL; }
+
 extern "C" int getNumberOfRowsToDraw() { return numberOfRowsToDraw; } 
 
 extern "C" int getGWidth() { return g_width; }
@@ -75,6 +80,8 @@ extern "C" void renderSave(int i);
 extern "C" void renderRoad(int i);
 
 extern "C" int getHorizontalResolution() { return horizontalResolution; }
+
+extern "C" int getPlayerDirection() { return playerDirection; }
 
 extern "C" int getCurrentRow() { return currentRow; }
 
@@ -188,37 +195,11 @@ void cleanupCars() {
     }
 }
 
-void renderPlayer(float x, float y, int state) {
-    if (g_no_render)
-        return;
-
-    int h = (g_height / numberOfRowsToDraw) / 2;
-    int w = h;
-
-    SDL_Rect rect;
-    rect.x = (y / horizontalResolution) * float(g_width) - w / 2;
-    rect.y = (numberOfRowsToDraw - (x - currentRow)) * (g_height / numberOfRowsToDraw) - h / 2;
-    rect.w = w;
-    rect.h = h;
-
-    if (state == 0) {
-        rect.h *= 2;
-        rect.y -= h;
-    }
-
-    if (playerDirection == 0) {
-        if (state == 0)
-            SDL_RenderCopy(renderer, heroR, NULL, &rect);
-        else if (state == 1)
-            SDL_RenderCopy(renderer, heroSR, NULL, &rect);
-    }
-    else {
-        if (state == 0)
-            SDL_RenderCopy(renderer, heroL, NULL, &rect);
-        else if (state == 1)
-            SDL_RenderCopy(renderer, heroSL, NULL, &rect);
-    }
+extern "C" int getRenderPlayY(int h, float x) {
+    return ((numberOfRowsToDraw - (x - currentRow)) * (g_height / numberOfRowsToDraw)) - h / 2;
 }
+
+extern "C" void renderPlayer(float x, float y, int state);
 
 bool cameraAndPlayerUpdate() {
     if (!g_playable) {

@@ -13,10 +13,177 @@
     .global drawRocks
     .global drawCars
     .global drawRock
+    .global renderPlayer
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
 // gameplay.h methods
+renderPlayer:
+    pushq   %rbp
+    movq    %rsp, %rbp
+    
+    pushq   %r12
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+    movq    %rdi, %r15                  #//! r15 = state
+# float x => xmm0, float y => xmm1, state = rdi
+
+    ## if (g_no_render) return;
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     renderPlayerEnd
+
+    ## int h = (g_height / numberOfRowsToDraw) / 2;
+    call    getNumberOfRowsToDraw
+    movq    %rax, %r12
+    call    getGHeight
+    movq    $0, %rdx
+    divq    %r12
+    shrq    %rax
+    movq    %rax, %r12                  #//! r12 = h
+
+    ## int w = h;
+    movq    %r12, %r13                  #//! r13 = w
+
+    ## SDL_Rect rect;
+    subq    $16, %rsp                   #//! rsp = SDL_Rect rect;
+
+    ## rect.x = ((y / horizontalResolution) * (g_width)) - (w / 2);
+    # sub. => DST-SRC
+
+    call    getHorizontalResolution
+    # Greatest instruction ever
+    cvtsi2ss %rax, %xmm2
+
+    # DIVSS => DST / SRC
+    # xmm1 = y
+    divss   %xmm2, %xmm1        # xmm1 = y / horizontalResolution
+
+    # I don't expect most of these to use the xmm registers
+    call    getGWidth
+    cvtsi2ss %rax, %xmm2        # xmm2 = g_width
+    mulss   %xmm1, %xmm2
+
+    cvtss2si %xmm2, %rax        # rax = ((y/horizRes) * (g_width))
+    shrq    %r13                # w / 2
+
+    subq    %r13, %rax          # rax now holds rect.x value
+    shlq    %r13                # w * 2
+
+    movl    %eax, (%rsp)        #//! rect.x = (%rsp)
+                                #//! xmm0 = x
+
+    // ## rect.y = ((numberOfRowsToDraw - (x - currentRow)) * (g_height / numberRowsDraw)) - h / 2;
+    // call    getCurrentRow
+    // cvtsi2ss %rax, %xmm2
+
+    // subss   %xmm2, %xmm0
+
+    // cvtss2si %xmm0, %r14       # r14 = x - currentRow
+
+    // call    getNumberOfRowsToDraw 
+    // subq    %r14, %rax 
+    // movq    %rax, %r14          #//! r14 = numR - (x - currentRow)
+
+    // call    getNumberOfRowsToDraw
+    // pushq   %rax
+
+    // call    getGHeight
+    // popq    %rdi
+    // movq    $0, %rdx
+    // divq    %rdi
+
+    // mulq    %r14
+    // # rax = THING (without - h/2)
+    // shrq    %r12
+    // subq    %r12, %rax
+    // shlq    %r12
+
+    // # rax = correct rect.y value
+    movq    %r12, %rdi
+    call    getRenderPlayY
+    movl    %eax, 4(%rsp)
+
+    movl    %r13d, 8(%rsp)
+    movl    %r12d, 12(%rsp)
+
+    cmpq    $0, %r15
+    jne     renderPlayerFirstEndIfBody
+
+    addl    %r12d, 12(%rsp)     # effectively rect.h *= 2
+    subl    %r12d, 4(%rsp)
+
+renderPlayerFirstEndIfBody:
+    call    getRenderer
+    movq    %rax, %r12          #//! renderer in rdi
+
+    call    getPlayerDirection
+    cmpq    $0, %rax
+
+    jne     renderPlayerRenderElse
+
+    cmpq    $0, %r15
+    jne     renderPlayerSecondIfSecondIf
+
+    call    getHeroR
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+    movq    %r12, %rdi
+
+    jmp     renderPlayerEnd
+
+renderPlayerSecondIfSecondIf:
+
+    call    getHeroSR
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+    jmp     renderPlayerEnd
+
+renderPlayerRenderElse:
+
+    cmpq    $0, %r15
+    jne     renderPlayerElseSecondIf
+
+    call    getHeroL
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+    jmp     renderPlayerEnd
+
+renderPlayerElseSecondIf:
+
+    call    getHeroSL
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    movq    $0, %rdx
+    movq    %rsp, %rcx
+    call    SDL_RenderCopy
+
+renderPlayerEnd:
+    addq    $16, %rsp
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
+
 
 drawRock:
     pushq   %rbp
