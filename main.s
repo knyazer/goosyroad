@@ -14,6 +14,9 @@
     .global drawCars
     .global drawRock
     .global renderPlayer
+    .global updateCar
+
+    ROADL:  .quad   1
 
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
@@ -184,6 +187,90 @@ renderPlayerEnd:
 
     ret
 
+updateCar:
+    pushq   %rbp
+    movq    %rsp, %rbp
+
+    pushq   %r12
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+
+    movq    %rdi, %r12         #//! r12 = i
+
+    call    getGStaticRender
+    cmpq    $0, %rax
+    jne     updateCarEnd
+
+    call    getRowType
+    movq    %rax, %r14         #//! rowType* in r14
+
+    call    getCars
+    movq    %rax, %r13      #//! r13 = cars*
+
+    movq    $-1, %rcx
+    # sizeof Car = 24 Bytes
+    movq    $0, %r9
+updateCarLoop:
+    inc     %rcx
+    movq    $24, %rax               #//! rcx = j
+    mulq    %rcx
+    addq    %r13, %rax              #//! rax = cars[j] (mem address)
+
+loopCalled:
+    ## if (cars[j].row == i && cars[j].exist)
+    cmpl    (%rax), %r12d
+    jne     updateCarLoopContinue
+    cmpb    $0, 20(%rax)
+    je      updateCarLoopContinue
+
+    ## basically you add either the negative or the positive
+    ## so basically I will take the speed, and flip the sign bit of
+    ## it works, and add that to the position
+    movl    $0x80000000, %r8d
+    cmpq    $1, (%r14, %r12, 4)
+    cmove   %r9, %r8
+    xorl    12(%rax), %r8d
+
+carBefore: 
+    # reserve 32 byes on stack
+    subq    $32, %rsp
+    movq    $0, (%rsp)
+    movq    $0, 16(%rsp)
+    # move updated speed to top of that stack (4-byte float)
+    movl    %r8d, (%rsp)
+
+    # move top of stack to xmm0
+    movss   (%rsp), %xmm0
+    
+    # move car[j].position to xmm1
+    movl    4(%rax), %r10d
+    movl    %r10d, 16(%rsp)
+    movss   16(%rsp), %xmm1
+
+    addss   %xmm1, %xmm0
+    movss   %xmm0, (%rsp)
+
+    movl    (%rsp), %r10d
+    movl    %r10d, 4(%rax)
+
+carAfter:
+
+    addq    $32, %rsp
+
+updateCarLoopContinue:
+    cmpq    carsSize, %rcx
+    jl      updateCarLoop
+
+updateCarEnd:
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+    ret
 
 drawRock:
     pushq   %rbp

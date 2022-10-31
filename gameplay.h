@@ -103,6 +103,7 @@ extern "C" int getCarY(int i, int h) { return (numberOfRowsToDraw - (cars[i].row
 extern "C" int getCarsRowType(int i) { return rowType[cars[i].row]; }
 extern "C" SDL_Texture* getCarTextureR(int i) { return carTexturesR[cars[i].type]; }
 extern "C" SDL_Texture* getCarTextureL(int i) { return carTexturesL[cars[i].type]; }
+
 extern "C" void drawCar(int i) {
     if (g_no_render)
         return;
@@ -176,14 +177,9 @@ void generateCars(int i) {
     }
 }
 
-void updateCar(int i) {
-    if (g_static_render)
-        return;
+extern "C" int* getRowType() { return rowType; } 
 
-    for (int j = 0; j < carsSize; j++)
-        if (cars[j].row == i && cars[j].exist)
-            cars[j].position += float(rowType[i] == ROADL ? 1 : -1) * cars[j].speed;
-}
+extern "C" void updateCar(int i);
 
 void cleanupCars() {
     for (int j = 0; j < carsSize; j++) {
