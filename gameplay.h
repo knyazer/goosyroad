@@ -3,6 +3,7 @@
 //
 
 #include "funcs.h"
+#include "stdio.h"
 
 #ifndef CROOSYROAD_GAMEPLAY_H
 #define CROOSYROAD_GAMEPLAY_H

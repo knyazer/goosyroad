@@ -19,6 +19,11 @@
 
     ROADL:  .quad   1
 
+.data
+    tempRect:   .quad 0
+                .quad 0
+
+.text
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
 // gameplay.h methods
@@ -66,9 +71,7 @@ drawCar:
     cvtsi2ss %rax, %xmm0    #//! xmm0 = g_width / horizontalRes
 
     movl    16(%r13) ,%eax
-    subq    $16, %rsp
-    // movq    $0, (%rsp)
-    // movq    $0, 8(%rsp)
+    subq    $8, %rsp
     movl    %eax, (%rsp)
     movss   (%rsp), %xmm1
     mulss   %xmm0, %xmm1
@@ -83,15 +86,18 @@ drawCar:
 
     mulss   %xmm0, %xmm1    # xmm1 = xmm1(cars[i].pos) * xmm0 (g_width/horizontal)
     cvtss2si %xmm1, %r8
-    movl    %r8d, (%rsp)    #//! rect.x = equation
+
+    movq    $tempRect, %r11
+    movl    %r8d, (%r11)    #//! rect.x = equation
     
     movq    %rbx, %rdi
     movq    %r15, %rsi
     call    getCarY
-    movl    %eax, 4(%rsp)
+    movq    $tempRect, %r11
+    movl    %eax, 4(%r11)
 
-    movl    %r12d, 8(%rsp)
-    movl    %r15d, 12(%rsp)
+    movl    %r12d, 8(%r11)
+    movl    %r15d, 12(%r11)
     
     call    getRowType
     movq    %rax, %r15  #//! r15 = rowType*
@@ -111,7 +117,7 @@ drawCar:
     movq    %rax, %rsi
     movq    %r12, %rdi
     movq    $0, %rdx
-    movq    %rsp, %rcx
+    movq    $tempRect, %rcx
     call    SDL_RenderCopy
 
     jmp     drawCarEnd
@@ -126,11 +132,11 @@ drawCarRoadR:
     movq    %rax, %rsi
     movq    %r12, %rdi
     movq    $0, %rdx
-    movq    %rsp, %rcx
+    movq    $tempRect, %rcx
     call    SDL_RenderCopy
 
 drawCarEnd:
-    addq    $16, %rsp
+    addq    $8, %rsp
     popq    %rbx
     popq    %r15
     popq    %r14
