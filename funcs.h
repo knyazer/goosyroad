@@ -14,7 +14,7 @@ int sign(float x) {
 
 TTF_Font* Sans;
 
-void drawText(const char* text, int mode, int r, int g, int b) {
+extern "C" void drawText(const char* text, int mode, int r, int g, int b) {
     if ( !Sans ) {
         std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
     }
@@ -65,7 +65,7 @@ void drawText(const char* text, int mode, int r, int g, int b) {
     SDL_DestroyTexture(Message);
 }
 
-int drawButton(const char* text, int pos, int r, int g, int b) {
+extern "C" int drawButton(const char* text, int pos, int r, int g, int b) {
     if ( !Sans ) {
         std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
     }

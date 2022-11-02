@@ -257,7 +257,7 @@ bool cameraAndPlayerUpdate() {
     return blockedPath != 0;
 }
 
-int drawGame() {
+extern "C" int drawGame() {
     if (!g_no_render) {
         SDL_SetRenderDrawColor(renderer, 87, 148, 105, g_alpha);
         SDL_RenderFillRect(renderer, &g_screen);

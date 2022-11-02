@@ -5,7 +5,7 @@
 #ifndef CROOSYROAD_MENU_H
 #define CROOSYROAD_MENU_H
 
-int drawMenu() {
+extern "C" int drawMenu() {
     drawGame();
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 160, 160, 180, 190 * g_alpha / 256);
