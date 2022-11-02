@@ -1,5 +1,6 @@
 .data
 
+decimal: .asciz "called: %d\n"
 
 .text
     // Defining consts
@@ -71,7 +72,7 @@ drawCar:
     cvtsi2ss %rax, %xmm0    #//! xmm0 = g_width / horizontalRes
 
     movl    16(%r13) ,%eax
-    subq    $8, %rsp
+    subq    $16, %rsp
     movl    %eax, (%rsp)
     movss   (%rsp), %xmm1
     mulss   %xmm0, %xmm1
@@ -136,12 +137,14 @@ drawCarRoadR:
     call    SDL_RenderCopy
 
 drawCarEnd:
-    addq    $8, %rsp
+    addq    $16, %rsp
+
     popq    %rbx
     popq    %r15
     popq    %r14
     popq    %r13
     popq    %r12
+
     movq    %rbp, %rsp
     popq    %rbp
 
@@ -668,36 +671,44 @@ drawCars:
     pushq   %r14
     pushq   %r15
 
-    movq    %rdi, %r14              # move low into r14
-    movq    %rsi, %r15              # move high into r15
+    movq    %rdi, %r12  #//! r12 = low
+    movq    %rsi, %r13  #//! r13 = high
 
-    movq    $0, %r12                # r12 will be the counter
-    call    getCars                 # rock has a size of 12 bytes, 3 ints (row, pos, type)
-    movq    %rax, %r13              # r13 now holds rocks[0] pointer
+    movq    $-1, %r14    #//! r14 = i
 
+    call    getCars
+    movq    %rax, %r15  #//! r15 = cars*
+    
 drawCarsLoop:
+    inc     %r14
 
-    cmpq    carsSize, %r12         # if r12 is greater than or equal to carsSize
-    jge     drawCarsEnd            # 
+    movq    $24, %rax
+    mulq    %r14
+    movq    %rax, %rdi
+    addq    %r15, %rdi #//! rdi = cars[i]
 
+drawCarsCarExist:
+    cmpb    $0, 20(%rdi)
+    je      drawCarsLoopContinue
 
-firstDrawCarsAnd:
-    cmpl    %r14d, (%r13)
+drawCarsRowMoreThanLow:
+    cmpl    %r12d, (%rdi)
     jl      drawCarsLoopContinue
 
-
-secondDrawCarsAnd:
-    cmpl    %r15d, (%r13)
+drawCarsRowLessThanHigh:
+    cmpl    %r13d, (%rdi)
     jge     drawCarsLoopContinue
 
-    movq    %r12, %rdi
+    // for some reason drawCar does not preserve the r15 register
+    // I have implemented this as a quick solution for now
+    pushq   %r15
+    movq    %r14, %rdi
     call    drawCar
+    popq    %r15
 
 drawCarsLoopContinue:
-    addq    $24, %r13
-
-    inc     %r12
-    jmp     drawCarsLoop
+    cmpq    carsSize, %r14
+    jl      drawCarsLoop
 
 drawCarsEnd:
     popq    %r15
@@ -707,7 +718,7 @@ drawCarsEnd:
 
     movq    %rbp, %rsp
     popq    %rbp
-
+    
     ret
 
 .global renderRoad
