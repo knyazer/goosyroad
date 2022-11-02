@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
             }
         }
         else {
+            printf("%d", state);
             throw std::runtime_error("Undefined state in main finite automata");
         }
 

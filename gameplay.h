@@ -315,7 +315,7 @@ extern "C" int drawGame() {
     return 0;
 }
 
-void initGame() {
+extern "C" void initGame() {
     for (int i = 0; i < 8; i++)
         rowType[i] = SAVE;
     rowType[8] = (rand() % 2) + 1;
