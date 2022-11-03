@@ -80,7 +80,3 @@ extern "C" {
         return SDL_KEYDOWN;
     }
 }
-
-extern "C" bool updateEvents();
-
-extern "C" int main(int argc, char *argv[]);

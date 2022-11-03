@@ -1007,7 +1007,7 @@ renderRoadBody:
     # SDL_Rect has a size of 16 bytes (4 ints)
     # creating SDL_Rect rect;
     movq    $16, %rdi
-    call    malloc
+    call    malloc # TODO: fix memory leak
 
     movq    %rax, %r15          # saving pointer to that malloc in r15
     movl    $0, (%r15)          # moving 0 to first int
@@ -1024,6 +1024,8 @@ renderRoadBody:
 
     div     %r14                # result of division in rax
     movl    %eax, 12(%r15)      # moving result of division to rect.h
+    addl    $2, 12(%r15)        # rect.h += 2
+    subl    $1, 4(%r15)         # rect.y -= 1
     movl    %eax, 8(%r15)       # moving same value to rect.w (because, that is kinda what you do)
 
     call    getGWidth
@@ -1680,8 +1682,12 @@ skipif2capu:
     je forwardEmptyPossible
 fepret:
     # check that rowType[playerRow - 1] == 0
-    #cmpb $1, (playerRow)
-    #jge asdfkhj
+    cmpb $1, (playerRow)
+    jg skipasdf
+
+movb $0, (backwardEmpty)
+
+    skipasdf:
     movl (playerRow), %eax
     subq $1, %rax
     movq $rowType, %r9
@@ -1691,7 +1697,6 @@ fepret:
     cmpl $0, (%r9)
     je backwardEmptyPossible
 bepret:
-asdfkhj:
     
     # check that rowType[playerRow] == 0
     movl (playerRow), %eax

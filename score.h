@@ -8,65 +8,35 @@
 #define CROOSYROAD_SCORE_H
 
 extern "C" {
-    int getGPost() {
-        return g_post;
-    }
+    int getGPost() ;
 
-    int getGPrev() {
-        return g_prev;
-    }
+    int getGPrev() ;
     
-    void setGPost(int state) {
-        g_post = state;
-    }
+    void setGPost(int state) ;
 
-    void setGPrev(int state) {
-        g_prev = state;
-    }
+    void setGPrev(int state) ;
 
-    void setGPrevScore(int score) {
-        g_prev_score = score;
-    }
+    void setGPrevScore(int score) ;
 
-    int getGPrevScore() {
-        return g_prev_score;
-    }
+    int getGPrevScore() ;
 
-    int getGCurrentScore() {
-        return g_current_score;
-    }
+    int getGCurrentScore() ;
 
-    void setGCurrentScore(int score) {
-        g_current_score = score;
-    }
+    void setGCurrentScore(int score) ;
 
-    int getGBestScore() {
-        return g_best_score;
-    }
+    int getGBestScore() ;
 
-    void setGBestScore(int score) {
-        g_best_score = score;
-    }
+    void setGBestScore(int score) ;
 
-    int getState() {
-        return state;
-    }
+    int getState() ;
 
-    void setState(int _state) {
-        state = _state;
-    }
+    void setState(int _state) ;
 
-    int getGClick() {
-        return g_click;
-    }
+    int getGClick() ;
 
-    int getGAlpha() {
-        return g_alpha;
-    }
+    int getGAlpha() ;
 
-    SDL_Rect* getGScreen() {
-        return &g_screen;
-    }
+    SDL_Rect* getGScreen() ;
 }
 
 extern "C" int drawScore();
