@@ -1033,7 +1033,7 @@ rockGenRandomLoop:
     movl %r14d, (%r13)
     
     call rand
-    movl $5, %ecx
+    movl $7, %ecx
     movq $0, %rdx
     div %ecx
 
@@ -1680,7 +1680,7 @@ cleanupCarsLoop:
 
     # check that car position < -0.5 * horizontalResolution
     movss 4(%r12), %xmm0
-    movss (fm05), %xmm1
+    movss (fm04), %xmm1
     cvtsi2ss (horizontalResolution), %xmm2
     mulss %xmm2, %xmm1
     comiss %xmm1, %xmm0
@@ -1688,7 +1688,7 @@ cleanupCarsLoop:
 
     # check if car position > 1.5 * horizontalResolution
     movss 4(%r12), %xmm0
-    movss (f15), %xmm1
+    movss (f14), %xmm1
     cvtsi2ss (horizontalResolution), %xmm2
     mulss %xmm2, %xmm1
     comiss %xmm1, %xmm0

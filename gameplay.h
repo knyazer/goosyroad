@@ -54,8 +54,8 @@ extern "C" void setRocksSize(int size) {
     rocksSize = size;
 }
 
-extern "C" Car* getCars() { return cars; }
-extern "C" Rock* getRocks() { return rocks; }
+extern "C" Car* getCars();//{ return cars; }
+extern "C" Rock* getRocks();// { return rocks; }
 
 extern "C" int getCarsFirstEmpty() { return carsFirstEmpty; }
 extern "C" void setCarsFirstEmpty(int i) { carsFirstEmpty = i; }
@@ -97,7 +97,7 @@ extern "C" SDL_Texture** getRockTextures() { return rockTextures; }
 #define ROADL 1
 #define ROADR 2
 
-extern "C" SDL_Texture* getCorrectRockTextureWithI(int i) { return rockTextures[i]; }
+extern "C" SDL_Texture* getCorrectRockTextureWithI(int i);// { return rockTextures[i]; }
 
 extern "C" int getCorrectRockDrawY(int i, int size) {
     return ((numberOfRowsToDraw - (rocks[i].row - currentRow)) * (g_height / numberOfRowsToDraw)) - size / 2;
