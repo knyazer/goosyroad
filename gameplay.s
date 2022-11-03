@@ -17,6 +17,7 @@ decimal: .asciz "called: %d\n"
     .global renderPlayer
     .global updateCar
     .global drawCar
+    .global firstInitOfGame
 
     ROADL:  .quad   1
 
@@ -807,5 +808,112 @@ renderRoadEnd:
 
     ret
 
-// funcs.h methods
+phero: .asciz "res/hero.png"
+pheroa: .asciz "res/heroa.png"
+pherob: .asciz "res/herob.png"
+pheroba: .asciz "res/heroba.png"
+pcar1: .asciz "res/car1.png"
+pcar1a: .asciz "res/car1a.png"
+pstone1: .asciz "res/stone1.png"
+pstone2: .asciz "res/stone2.png"
+pstone3: .asciz "res/stone3.png"
+pstone4: .asciz "res/stone4.png"
+pstone5: .asciz "res/stone5.png"
+pstone6: .asciz "res/stone6.png"
+proad: .asciz "res/road.png"
+
+# first init of the game
+firstInitOfGame:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    pushq %r12
+    pushq %r13
+
+    call getRenderer
+    movq %rax, %r12
+
+    movq %r12, %rdi
+    movq $phero, %rsi
+    call IMG_LoadTexture
+    movq %rax, (heroSR)
+
+    movq %r12, %rdi
+    movq $pheroa, %rsi
+    call IMG_LoadTexture
+    movq %rax, (heroSL)
+
+    movq %r12, %rdi
+    movq $pherob, %rsi
+    call IMG_LoadTexture
+    movq %rax, (heroR)
+
+    movq %r12, %rdi
+    movq $pheroba, %rsi
+    call IMG_LoadTexture
+    movq %rax, (heroL)
+
+    movq %r12, %rdi
+    movq $pcar1, %rsi
+    call IMG_LoadTexture
+    movq %rax, (carTexturesL)
+
+    movq %r12, %rdi
+    movq $pcar1a, %rsi
+    call IMG_LoadTexture
+    movq %rax, (carTexturesR)
+    
+    movq $rockTextures, %r13
+    movq %r12, %rdi
+    movq $pstone1, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $pstone2, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $pstone3, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $pstone4, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $pstone5, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $pstone6, %rsi
+    call IMG_LoadTexture
+    movq %rax, (%r13)
+    addq $8, %r13
+
+    movq %r12, %rdi
+    movq $proad, %rsi
+    call IMG_LoadTexture
+    movq %rax, (roadTexture)
+
+    call initGame
+
+    popq %r13
+    popq %r12
+
+    movq %rbp, %rsp
+    popq %rbp
+
+    ret
+
+
 

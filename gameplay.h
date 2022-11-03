@@ -387,27 +387,6 @@ extern "C" void initGame() {
         g_current_score = 1;
 }
 
-extern "C" void firstInitOfGame() {
-    heroSR = IMG_LoadTexture(renderer, "res/hero.png");
-    heroSL = IMG_LoadTexture(renderer, "res/heroa.png");
-    heroR = IMG_LoadTexture(renderer, "res/herob.png");
-    heroL = IMG_LoadTexture(renderer, "res/heroba.png");
-
-    carTexturesL[0] = IMG_LoadTexture(renderer, "res/car1.png");
-    carTexturesR[0] = IMG_LoadTexture(renderer, "res/car1a.png");
-
-    rockTextures[0] = IMG_LoadTexture(renderer, "res/stone1.png");
-    rockTextures[1] = IMG_LoadTexture(renderer, "res/stone2.png");
-    rockTextures[2] = IMG_LoadTexture(renderer, "res/stone3.png");
-    rockTextures[3] = IMG_LoadTexture(renderer, "res/stone4.png");
-    rockTextures[4] = IMG_LoadTexture(renderer, "res/stone5.png");
-    rockTextures[5] = IMG_LoadTexture(renderer, "res/stone6.png");
-
-    roadTexture = IMG_LoadTexture(renderer, "res/road.png");
-
-    std::cout << IMG_GetError() << std::endl;
-
-    initGame();
-}
+extern "C" void firstInitOfGame();
 
 #endif //CROOSYROAD_GAMEPLAY_H
