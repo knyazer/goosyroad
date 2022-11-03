@@ -139,71 +139,7 @@ extern "C" int getRenderPlayY(int h, float x) {
     return ((numberOfRowsToDraw - (x - currentRow)) * (g_height / numberOfRowsToDraw)) - h / 2;
 }
 
-extern "C" void renderPlayer(float x, float y, int state);
-
-bool cameraAndPlayerUpdate() {
-    if (!g_playable) {
-        currentRow += 0.005;
-        return false;
-    }
-    if (g_static_render)
-        return false;
-
-    bool forwardEmpty = true, backwardEmpty = true, leftEmpty = true, rightEmpty = true;
-    if (rowType[playerRow + 1] == SAVE)
-        for (int i = 0; i < rocksSize; i++)
-            if (rocks[i].row == playerRow + 1 && rocks[i].position == playerColumn)
-                forwardEmpty = false;
-
-    if (playerRow >= 1 && rowType[playerRow - 1] == SAVE)
-        for (int i = 0; i < rocksSize; i++)
-            if (rocks[i].row == playerRow - 1 && rocks[i].position == playerColumn)
-                backwardEmpty = false;
-
-    if (rowType[playerRow] == SAVE) {
-        for (int i = 0; i < rocksSize; i++) {
-            if (rocks[i].row == playerRow && rocks[i].position == playerColumn + 1)
-                leftEmpty = false;
-            if (rocks[i].row == playerRow && rocks[i].position == playerColumn - 1)
-                rightEmpty = false;
-        }
-    }
-
-    const int blockedLen = 30;
-    static int blockedPath = 0;
-    if (g_forward) {
-        if (forwardEmpty) {
-            targetRow += 0.4;
-            playerRow++;
-        }
-        else
-            blockedPath = blockedLen;
-    }
-    if (g_backward) {
-        if (backwardEmpty) {
-            targetRow -= 0.4;
-            playerRow--;
-        }
-        else
-            blockedPath = blockedLen;
-    }
-    if (g_left) {
-        playerDirection = 0;
-        if (leftEmpty && playerColumn < horizontalResolution - 1)
-            playerColumn++;
-        else
-            blockedPath = blockedLen;
-    }
-    if (g_right) {
-        playerDirection = 1;
-        if (rightEmpty && playerColumn > 1)
-            playerColumn--;
-        else
-            blockedPath = blockedLen;
-    }
-    if (blockedPath > 0)
-        blockedPath--;
-
+extern "C" void updateComplemenetaryFilters() {
     if (std::abs(playerRow - playerRowF) > eps)
         playerRowF += sign(playerRow - playerRowF) * eps;
 
@@ -217,9 +153,11 @@ bool cameraAndPlayerUpdate() {
         targetRow += 0.005;
 
     currentRow = 0.98 * currentRow + 0.02 * targetRow;
-
-    return blockedPath != 0;
 }
+
+extern "C" void renderPlayer(float x, float y, int state);
+
+extern "C" bool cameraAndPlayerUpdate();
 
 extern "C" int drawGame() {
     if (!g_no_render) {

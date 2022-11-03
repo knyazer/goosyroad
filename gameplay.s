@@ -1355,3 +1355,301 @@ calculateMaxSpeedcl:
     movss %xmm1, (maxSpeed)
     
     jmp .skipgcloop
+
+
+.global cameraAndPlayerUpdate
+
+.data
+f0005: .float 0.005
+forwardEmpty: .byte 0
+backwardEmpty: .byte 0
+leftEmpty: .byte 0
+rightEmpty: .byte 0
+blockedPath: .int 30
+
+.text
+cameraAndPlayerUpdate:
+
+    cmpb $0, (g_playable)
+    jne skipif1capu
+    
+    movss (f0005), %xmm0
+    movss (currentRow), %xmm1
+    addss %xmm0, %xmm1
+    movss %xmm1, (currentRow)
+    
+    movq $0, %rax
+    ret
+
+skipif1capu:
+    
+    cmpb $1, (g_static_render)
+    jne skipif2capu
+    
+    movq $0, %rax
+    ret
+
+skipif2capu:
+
+    pushq %rbp
+    movq %rsp, %rbp
+
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    movb $1, (forwardEmpty)
+    movb $1, (backwardEmpty)
+    movb $1, (leftEmpty)
+    movb $1, (rightEmpty)
+
+    # check chat rowType[playerRow + 1] == 0
+    movl (playerRow), %eax
+    movq $0, %rdx
+    addq $1, %rax
+    movq $rowType, %r9
+    movq $4, %r8
+    mul %r8
+    addl %eax, %r9d
+    cmpl $0, (%r9)
+    je forwardEmptyPossible
+fepret:
+    # check that rowType[playerRow - 1] == 0
+    #cmpb $1, (playerRow)
+    #jge asdfkhj
+    movl (playerRow), %eax
+    subq $1, %rax
+    movq $rowType, %r9
+    movq $4, %r8
+    mul %r8
+    addl %eax, %r9d
+    cmpl $0, (%r9)
+    je backwardEmptyPossible
+bepret:
+asdfkhj:
+    
+    # check that rowType[playerRow] == 0
+    movl (playerRow), %eax
+    movq $rowType, %r9
+    movq $4, %r8
+    mul %r8
+    addl %eax, %r9d
+    cmpl $0, (%r9)
+    je leftRightEmptyPossible
+lrepret:
+    jmp doneWithfirstPartOfCameraAndPlayerUpdate
+
+forwardEmptyPossible:
+    # rcx is the counter
+    # rdx is the pointer to the current rocks
+    movq $0, %rcx
+    movq $rocks, %rdx
+feploop:
+    cmpl %ecx, (rocksSize)
+    jl feploopDone
+
+    # check that rocks[i].row == playerRow + 1
+    movl (%rdx), %eax
+    subl $1, %eax
+    cmpl %eax, (playerRow)
+    jne feploopContinue
+
+    # check that rocks[i].position == playerColumn
+    movl 4(%rdx), %eax
+    cmpl %eax, (playerColumn)
+    jne feploopContinue
+
+    # we cannot move forward if we are here
+    movb $0, (forwardEmpty)
+    
+feploopContinue:
+    addq $12, %rdx
+    incq %rcx
+    jmp feploop
+
+feploopDone:
+    jmp fepret
+
+backwardEmptyPossible:
+    # rcx is the counter
+    # rdx is the pointer to the current rocks
+    movq $0, %rcx
+    movq $rocks, %rdx
+beploop:
+    cmpl %ecx, (rocksSize)
+    jl beploopDone
+
+    # check that rocks[i].row == playerRow - 1
+    movl (%rdx), %eax
+    addl $1, %eax
+    cmpl %eax, (playerRow)
+    jne beploopContinue
+
+    # check that rocks[i].position == playerColumn
+    movl 4(%rdx), %eax
+    cmpl %eax, (playerColumn)
+    jne beploopContinue
+
+    # we cannot move backward if we are here
+    movb $0, (backwardEmpty)
+
+beploopContinue:
+    addq $12, %rdx
+    incq %rcx
+    jmp beploop
+
+beploopDone:
+    jmp bepret
+
+leftRightEmptyPossible:
+    # rcx is the counter
+    # rdx is the pointer to the current rocks
+    movq $0, %rcx
+    movq $rocks, %rdx
+
+lreloop:
+    cmpl %ecx, (rocksSize)
+    jl lreloopDone
+
+    # check that rocks[i].row == playerRow
+    movl (%rdx), %eax
+    cmpl %eax, (playerRow)
+    jne lreloopContinue
+
+    # check that rocks[i].position == playerColumn - 1
+    movl 4(%rdx), %eax
+    subl $1, %eax
+    cmpl %eax, (playerColumn)
+    jne lreloopContinue1
+
+    # we cannot move left if we are here
+    movb $0, (leftEmpty)
+
+lreloopContinue1:
+    # check that rocks[i].position == playerColumn + 1
+    movl 4(%rdx), %eax
+    addl $1, %eax
+    cmpl %eax, (playerColumn)
+    jne lreloopContinue2
+
+    # we cannot move right if we are here
+    movb $0, (rightEmpty)
+
+lreloopContinue2:
+lreloopContinue:
+    addq $12, %rdx
+    incq %rcx
+    jmp lreloop
+
+lreloopDone:
+    jmp lrepret
+
+doneWithfirstPartOfCameraAndPlayerUpdate:
+    # check if there is an attempt to move forward (g_forward = true)
+    cmpb $1, (g_forward)
+    jne forwardcheckdone
+
+    # check if we can move forward
+    cmpb $1, (forwardEmpty)
+    jne forwardisblocked
+
+    # add 0.4 to targetRow, and increment player row
+    movss (f04), %xmm0
+    addss (targetRow), %xmm0
+    movss %xmm0, (targetRow)
+    incl (playerRow)
+    jmp forwardcheckdone
+forwardisblocked:
+    movl $30, (blockedPath)
+
+forwardcheckdone:
+    # check if there is an attempt to move backward (g_backward = true)
+    cmpb $1, (g_backward)
+    jne backwardcheckdone
+
+    # check if we can move backward
+    cmpb $1, (backwardEmpty)
+    jne backwardisblocked
+
+    # subtract 0.4 from targetRow, and decrement player row
+    movss (f04), %xmm0
+    movss (targetRow), %xmm1
+    subss %xmm0, %xmm1
+    movss %xmm1, (targetRow)
+    decl (playerRow)
+    jmp backwardcheckdone
+    
+backwardisblocked:
+    movl $30, (blockedPath)
+
+backwardcheckdone:
+    # check if there is an attempt to move left (g_left = true)
+    cmpb $1, (g_left)
+    jne leftcheckdone
+    
+    movl $0, (playerDirection)
+    # check if leftEmpty and playerColumn < horizontalResolution - 1
+    cmpb $1, (leftEmpty)
+    jne leftisblocked
+    movl (horizontalResolution), %eax
+    subl $1, %eax
+    cmpl (playerColumn), %eax
+    jle leftisblocked
+
+    incl (playerColumn)
+    jmp leftcheckdone
+
+leftisblocked:
+    movl $30, (blockedPath)
+
+leftcheckdone:
+    # check if there is an attempt to move right (g_right = true)
+    cmpb $1, (g_right)
+    jne rightcheckdone
+
+    movl $1, (playerDirection)
+    # check if rightEmpty and playerColumn > 1
+    cmpb $1, (rightEmpty)
+    jne rightisblocked
+    cmpl $1, (playerColumn)
+    jle rightisblocked
+
+    decl (playerColumn)
+    jmp rightcheckdone
+
+rightisblocked:
+    movl $30, (blockedPath)
+
+rightcheckdone:
+    
+    #in case blockedPath > 0, decrement it
+    cmpl $0, (blockedPath)
+    jle blockedPathDone
+    decl (blockedPath)
+blockedPathDone:
+    
+    call updateComplemenetaryFilters
+
+    # return blockedPath != 0
+    cmpl $0, (blockedPath)
+    jne returnTrue
+    jmp returnFalse
+
+returnTrue:
+    movb $1, %al
+    jmp returnDone
+
+returnFalse:
+    movb $0, %al
+    jmp returnDone
+
+returnDone:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+
+    movq %rbp, %rsp
+    popq %rbp
+    ret
