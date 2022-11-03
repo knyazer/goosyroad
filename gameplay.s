@@ -1,6 +1,7 @@
 .data
 
-decimal: .asciz "called: %d\n"
+decimal: .asciz "%d"
+threeQuarters: .float 0,75
 
 .text
     // Defining consts
@@ -18,6 +19,7 @@ decimal: .asciz "called: %d\n"
     .global updateCar
     .global drawCar
     .global firstInitOfGame
+    .global drawGame
 
     ROADL:  .quad   1
 
@@ -29,6 +31,267 @@ decimal: .asciz "called: %d\n"
 # rax, rcx, rdx, rdi, rsi, r8, r9, r10, r11
 
 // gameplay.h methods
+
+drawGame:
+    pushq   %rbp
+    movq    %rsp, %rbp
+
+    pushq   %r12
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+    pushq   %rbx
+    pushq   %rbx
+
+drawGameGNoRenderCheck:
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     drawGameGetBlocked
+
+    call    getRenderer
+    movq    %rax, %r12
+    call    getGAlpha
+    movq    %rax, %r8
+    movq    %r12, %rdi
+    movq    $87, %rsi
+    movq    $148, %rdx
+    movq    $105, %rcx
+    call    SDL_SetRenderDrawColor
+
+    call    getGScreen
+    movq    %rax, %rsi
+    movq    %r12, %rdi
+    call    SDL_RenderFillRect
+
+drawGameGetBlocked:
+
+    call    cameraAndPlayerUpdate
+    movq    %rax, %r12 #//! r12 = blocked
+
+drawGameCalculateLandH:
+    call    getCurrentRow
+    movq    %rax, %r13
+    decq    %r13 #//! r13 = l
+
+    call    getNumberOfRowsToDraw
+    addq    %r13, %rax
+    addq    $3, %rax
+    movq    %rax, %r14 #//! r14 = h
+
+    movq    $0, %r15
+    movq    %r14, %r15 #//! r15 = i = (h) (counter)
+    incq    %r15
+
+    call    getRowType
+    movq    %rax, %rbx #//! rbx = rowType*
+
+drawGameRenderRoadSaveLoop:
+    decq    %r15
+
+    movq    $0, %rdi
+    movl    (%rbx, %r15, 4), %edi
+
+    cmpl    $0, %edi # comparing to SAVE
+    je      drawGamecontinueRenderLoopCheck
+    # nothing to do, because renderSave doesn't do anything
+
+drawGamecontinueRenderLoopCheck:
+    cmpl    $1, %edi # Comparing to ROADL
+    je      drawGameRenderRoad
+
+    cmpl    $2, %edi # comparing to ROADR
+    je      drawGameRenderRoad
+
+    jmp     drawGameRenderRoadSaveLoopContinue
+
+drawGameRenderRoad:
+    movl    %r15d, %edi
+    call    renderRoad
+    jmp     drawGameRenderRoadSaveLoopContinue
+
+drawGameRenderRoadSaveLoopContinue:
+    cmpl    %r13d, %r15d
+    jg      drawGameRenderRoadSaveLoop
+
+drawGameDrawRocksAndCars:
+    movl    %r13d, %edi
+    movl    %r14d, %esi
+    call    drawCars
+
+    movl    %r13d, %edi
+    movl    %r14d, %esi
+    call    drawRocks
+
+    # r14, r15, rbx free
+    # we can still use r13 (l) for currentRow - 1 = l
+    # setting up the counter (i = currentRow + (numberOfRowsToDraw * 3) + 2)
+    # should start 1 above (decrementing loop)
+    call    getNumberOfRowsToDraw
+    movq    $3, %r14
+    mulq    %r14
+    movq    %rax, %r14
+
+    call    getCurrentRow
+    addq    %rax, %r14 
+    addq    $3, %r14 #//! r14 = counter (i)
+
+    call    getRowType
+    movq    %rax, %r15 #//! r15 = int* rowType
+
+drawGameUpdateAndGenerateCarLoop:
+    decq    %r14
+
+    movl    (%r15, %r14, 4), %ebx
+
+    cmpl    $1, %ebx # comparing to ROADL
+    je      drawGameUpdateCars
+
+    cmpl    $2, %ebx # comparing to ROADR
+    je      drawGameUpdateCars
+
+    jmp     drawGameUpdateAndGenerateCarLoopContinue
+
+drawGameUpdateCars:
+
+    movq    %r14, %rdi
+    call    generateCars
+    movq    %r14, %rdi
+    call    updateCar
+    jmp     drawGameUpdateAndGenerateCarLoopContinue
+
+drawGameUpdateAndGenerateCarLoopContinue:
+    cmpl    %r14d, %r13d
+    jl      drawGameUpdateAndGenerateCarLoop
+
+    call    cleanupCars
+
+    # r13, r14, r15, rbx free
+    call    getGPlayable
+    cmpq    $0, %rax
+    je      drawGameUpdateCurrentScore
+
+drawGameRenderPlayerCuzPlayable:
+    // movq    %r12, %rdi
+    // call    renderPlayerHelper
+    subq    $16, %rsp
+    call    getPlayerRowF
+    movss   %xmm0, (%rsp)
+    call    getPlayerColumnF
+    movss   %xmm0, %xmm1
+    movss   (%rsp), %xmm0
+    addq    $16, %rsp
+
+    movq    $1, %rdi
+    cmpq    $0, %r12
+    cmovne  %rdi, %r12
+
+    movq    %r12, %rdi
+
+    // cvtsi2ss %r13, %xmm0 # playerRow (x)
+    // cvtsi2ss %r14, %xmm1 # playerColumn (y)
+
+    call    renderPlayer
+
+# r12, r13, r14, r15, rbx free
+drawGameUpdateCurrentScore:
+    call    getGPlayable
+    cmpq    $0, %rax
+    je      drawGameReturnCarLoopStart
+    
+    call    getGNoRender
+    cmpq    $0, %rax
+    jne     drawGameReturnCarLoopStart
+
+    call    getGCurrentScore
+    movq    %rax, %r12
+    call    getPlayerRow
+    movq    %r12, %rdi
+    subq    $2, %rax
+    cmpq    %rax, %r12
+    cmovl   %rax, %rdi 
+    call    setGCurrentScore
+
+    # char buffer[32];
+    subq    $32, %rsp
+
+    movq    %rsp, %rdi
+    movq    $decimal, %rsi
+    movq    %r12, %rdx
+    call    sprintf
+
+    movq    %rsp, %rdi
+    movq    $1, %rsi
+    movq    $219, %rdx
+    movq    $167, %rcx
+    movq    $11, %r8
+    call    drawText
+
+    # removing buffer
+    addq    $32, %rsp
+
+drawGameReturnCarLoopStart:
+    # all registers free, we going
+    movq    $-1, %r12 #//! r12 = i (counter)
+
+
+drawGameReturnCarLoop:
+    incq    %r12
+
+    movq    %r12, %rdi
+    call    getComplexAndCondition
+
+    cmpq    $0, %rax
+    je      drawGameReturnCarLoopContinue
+
+    movq    $1, %rax
+    jmp     drawGameEnd
+
+drawGameReturnCarLoopContinue:
+    cmpq    carsSize, %r12
+    jl      drawGameReturnCarLoop
+
+    call    getPlayerRow
+    movq    %rax, %r12
+    call    getFloatCurrentRow
+    movss   %xmm0, %xmm1
+    movq    threeQuarters, %r14
+    cvtsi2ss %r12, %xmm0 # playerRow
+    cvtsi2ss %r14, %xmm2 # threeQuarters
+
+    subss   %xmm2, %xmm1 # currentRow - 0.75
+    comiss  %xmm0, %xmm1
+    jbe     drawGamePlayerRowCheck
+
+    movq    $1, %rax
+    jmp     drawGameEnd
+
+drawGamePlayerRowCheck:
+
+    call    getPlayerRow
+    cmpq    $999, %rax
+    jl      drawGamePreEnd
+
+    movq    $1, %rax
+    jmp     drawGameEnd
+
+drawGamePreEnd:
+    movq    $0, %rax
+
+drawGameEnd:
+    popq    %rbx
+    popq    %rbx
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+
+    movq    %rbp, %rsp
+    popq    %rbp
+
+    ret
+
+
+
 drawCar:
     pushq   %rbp
     movq    %rsp, %rbp
