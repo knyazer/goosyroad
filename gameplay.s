@@ -1366,7 +1366,8 @@ backwardEmpty: .byte 0
 leftEmpty: .byte 0
 rightEmpty: .byte 0
 blockedPath: .int 30
-
+f15: .float 1.5
+fm05: .float -0.5
 .text
 cameraAndPlayerUpdate:
 
@@ -1652,4 +1653,73 @@ returnDone:
 
     movq %rbp, %rsp
     popq %rbp
+    ret
+
+
+.global cleanupCars
+cleanupCars:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    # rcx is the counter
+    # rdx is the pointer to the current car
+    movq $0, %r13
+    movq $cars, %r12
+cleanupCarsLoop:
+    cmpl %r13d, (carsSize)
+    jl cleanupCarsLoopDone
+
+    # check if car exists
+    cmpb $1, 20(%r12)
+    jne cleanupCarsLoopContinue
+
+    # check that car position < -0.5 * horizontalResolution
+    movss 4(%r12), %xmm0
+    movss (fm05), %xmm1
+    cvtsi2ss (horizontalResolution), %xmm2
+    mulss %xmm2, %xmm1
+    comiss %xmm1, %xmm0
+    jbe removeCarrcl
+
+    # check if car position > 1.5 * horizontalResolution
+    movss 4(%r12), %xmm0
+    movss (f15), %xmm1
+    cvtsi2ss (horizontalResolution), %xmm2
+    mulss %xmm2, %xmm1
+    comiss %xmm1, %xmm0
+    jae removeCarrcl
+
+    # check if car row < currentRow - numberofRowstodraw
+    movl (%r12), %eax
+    movl (currentRow), %r8d
+    subl (numberOfRowsToDraw), %r8d
+    cmpl %eax, %r8d
+    jl removeCarrcl
+
+    jmp cleanupCarsLoopContinue
+
+removeCarrcl:
+    # remove car
+    movq %r13, %rdi
+    call removeCar
+    
+cleanupCarsLoopContinue:
+    addq $24, %r12
+    incq %r13
+    jmp cleanupCarsLoop
+
+cleanupCarsLoopDone:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+
+    movq %rbp, %rsp
+    popq %rbp
+
     ret
