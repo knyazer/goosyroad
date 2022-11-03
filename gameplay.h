@@ -130,19 +130,7 @@ extern "C" int* getRowType() { return rowType; }
 
 extern "C" void updateCar(int i);
 
-<<<<<<< HEAD
 extern "C" void cleanupCars();
-=======
-extern "C" void cleanupCars() {
-    for (int j = 0; j < carsSize; j++) {
-        if (cars[j].exist)
-            if (cars[j].position < -0.5 * horizontalResolution
-                    || cars[j].position > 1.5 * horizontalResolution
-                    || cars[j].row < (currentRow - numberOfRowsToDraw))
-                removeCar(j);
-    }
-}
->>>>>>> refs/remotes/origin/master
 
 extern "C" int getRenderPlayY(int h, float x) {
     return ((numberOfRowsToDraw - (x - currentRow)) * (g_height / numberOfRowsToDraw)) - h / 2;
