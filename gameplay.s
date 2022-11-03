@@ -1297,7 +1297,6 @@ doneWithGenerateCars:
     ret
 
 .roadl_gloop:
-
     # for left road we want to check that cars[j].position > 1
     # and generated distance will be 1.4 * horizontalResolution - position
     movss 4(%r13), %xmm0 # position
@@ -1314,13 +1313,6 @@ doneWithGenerateCars:
     jmp calculateMaxSpeedcl
 
 .roadr_gloop:
-
-    # carPosition = 1.4 * horizontalResolution
-    movl (horizontalResolution), %eax
-    cvtsi2ss %eax, %xmm0
-    mulss (f14), %xmm0
-    movss %xmm0, (carPosition)
-
     # for right road we want to check that cars[j].position > horizontalResolution - 1- cars[j].width
     # and generated distance will be cars[j].position + 0.4 * horizontalResolution
     movss 4(%r13), %xmm0 # position
