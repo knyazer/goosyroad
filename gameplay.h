@@ -387,7 +387,7 @@ extern "C" void initGame() {
         g_current_score = 1;
 }
 
-void firstInitOfGame() {
+extern "C" void firstInitOfGame() {
     heroSR = IMG_LoadTexture(renderer, "res/hero.png");
     heroSL = IMG_LoadTexture(renderer, "res/heroa.png");
     heroR = IMG_LoadTexture(renderer, "res/herob.png");
