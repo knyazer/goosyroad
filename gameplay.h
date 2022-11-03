@@ -44,10 +44,15 @@ struct Rock {
     int type;
 };
 
-const int carsSize = 100, rocksSize = 1000;
+const int carsSize = 100;
+int rocksSize = 1000;
 int carsFirstEmpty; // pointer to the first empty space in an array of cars
 Car cars[carsSize];
-Rock rocks[rocksSize];
+Rock rocks[1000];
+
+extern "C" void setRocksSize(int size) {
+    rocksSize = size;
+}
 
 extern "C" Car* getCars() { return cars; }
 extern "C" Rock* getRocks() { return rocks; }
@@ -315,78 +320,7 @@ extern "C" int drawGame() {
     return 0;
 }
 
-extern "C" void initGame() {
-    for (int i = 0; i < 8; i++)
-        rowType[i] = SAVE;
-    rowType[8] = (rand() % 2) + 1;
-    for (int i = 9; i < 1000; i++) {
-        float dangerWeight = i / 50 + 1;
-
-        int x = rand() % int(200 * dangerWeight + 200);
-        if (x < 200)
-            rowType[i] = SAVE;
-        else
-            rowType[i] = (rand() % 2) + 1;
-    }
-
-    for (int i = 0; i < carsSize; i++)
-        cars[i].exist = false;
-    carsFirstEmpty = 0;
-
-    int k = 0;
-    for (int i = 6; i < 1000; i++) {
-        if (rowType[i] == SAVE) {
-            int num = 0;
-            do {
-                num++;
-                rocks[k].row = i;
-                rocks[k].position = (rand() % (horizontalResolution - 1)) + 1;
-                rocks[k].type = (rand() % 6);
-                k++;
-                if (k >= rocksSize)
-                    break;
-            } while (rand() % 10 < 5 && num + 4 < horizontalResolution);
-
-            for (int j = k - num; j < k; j++)
-                for (int m = j + 1; m < k; m++)
-                    if (rocks[m].position == rocks[j].position)
-                        rocks[j].row = -1000;
-
-            if (k >= rocksSize)
-                break;
-        }
-    }
-
-
-
-    g_no_render = true;
-    bool playable_stored = g_playable;
-    g_playable = false;
-    for (int i = 0; i < 600; i++)
-        drawGame();
-    g_playable = playable_stored;
-    g_no_render = false;
-
-    currentRow = 0;
-    targetRow = 0;
-
-    eps = 0.05;
-
-    numberOfRowsToDraw = 12;
-    horizontalResolution = 12;
-
-    playerDirection = rand() % 2;
-
-    playerRow = 3;
-    playerColumn = horizontalResolution / 2;
-
-    playerRowF = playerRow;
-    playerColumnF = playerColumn;
-
-    if (g_playable && !g_static_render)
-        g_current_score = 1;
-}
-
+extern "C" void initGame();
 extern "C" void firstInitOfGame();
 
 #endif //CROOSYROAD_GAMEPLAY_H

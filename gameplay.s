@@ -914,6 +914,258 @@ firstInitOfGame:
     popq %rbp
 
     ret
+.global initGame
+# init game
+.data
+f50: .float 50.0
+f200: .float 200.0
+f1: .float 1.0
+f005: .float 0.05
+f0: .float 0.0
+.text
 
+initGame:
+    pushq %rbp
+    movq %rsp, %rbp
 
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    
+    movq $8, %rcx
+    movq $rowType, %rax
+.initGameFLoop:
+    movl $0, (%rax)
+    addq $4, %rax
+    decq %rcx
+    jnz .initGameFLoop
+    
+    movq %rax, %r12
+
+    call rand
+    movl $2, %ecx
+    movl $0, %edx
+    div %ecx
+    addl $1, %edx
+    movl %edx, (%r12)
+    addq $4, %r12
+
+    movq $9, %r13
+.initGameLoop2:
+    cvtsi2ssq %r13, %xmm0
+    divss (f50), %xmm0
+    addss (f1), %xmm0
+    mulss (f200), %xmm0
+    addss (f200), %xmm0
+    cvttss2si %xmm0, %r14
+    call rand
+    movq $0, %rdx
+    div %r14
+    
+    # x is in rdx
+    cmpq $200, %rdx
+    jl .igl_setSave
+    
+    call rand
+    movl $2, %ecx
+    movl $0, %edx
+    div %ecx
+    addl $1, %edx
+    movl %edx, (%r12)
+    addq $4, %r12
+    
+.igl_setSave_ret: 
+    
+    incq %r13
+    cmpq $1000, %r13
+    jl .initGameLoop2
+    
+    jmp initGameCarsProcessing
+
+.igl_setSave:
+    movl $0, (%r12)
+    addq $4, %r12
+    jmp .igl_setSave_ret
+
+initGameCarsProcessing:
+    movq (carsSize), %rcx
+    movq $cars, %rax
+
+.igcploop:
+    movb $0, 20(%rax)
+    addq $24, %rax
+    subq $1, %rcx
+    jnz .igcploop
+
+    movl $0, (carsFirstEmpty)
+
+.data
+    k: .quad 0
+.text
+    movq $0, (k)
+    movq $6, %r14 #r14 is i
+
+rocksLoop:
+    movq $rowType, %r9
+    cmpl $0, (%r9, %r14, 4)
+    je rockGeneration
+.rockGenerationBack:
+    
+    incq %r14
+    cmpq $1000, %r14
+    jl rocksLoop
+    
+    jmp afterMathSetupInitGame
+
+rockGeneration:
+    movq $0, %r12 # num is r12
+    movl $0, %r15d
+
+rockGenRandomLoop:
+    incq %r12
+    movq $rocks, %r13 # r13 is pointer to the rock, rocks are 3 byte size
+    movq (k), %rax
+    movq $12, %r8
+    mulq %r8
+    addq %rax, %r13
+
+    movl %r14d, (%r13)
+    
+    call rand
+    movl $5, %ecx
+    movq $0, %rdx
+    div %ecx
+
+    inc %edx
+    addl %edx, %r15d
+    cmpl (horizontalResolution), %r15d
+    jge rockGenRandomLoopDoneWSkip
+    jmp continueRockGenRandomLoop
+
+rockGenRandomLoopDoneWSkip:
+    movq $-1000, (%r13)
+    movq $0, 4(%r13)
+    jmp rockGenRandomLoopDone
+
+    continueRockGenRandomLoop:
+    movl %r15d, 4(%r13)
+
+    call rand
+    movl $6, %ecx
+    movq $0, %rdx
+    div %ecx
+    movl %edx, 8(%r13)
+
+    incq (k)
+
+    movq (k), %rax
+    cmpq %rax, (rocksSize)
+    je rockGenRandomLoopDone
+
+    jmp rockGenRandomLoop
+
+rockGenRandomLoopDone:
+jmp .rockGenerationBack
+    movq (k), %r10
+    subq %r12, %r10
+.n1l:
+    cmpq %r10, (k)
+    jl .n1ldone
+    
+    movq %r10, %r11
+    addq $1, %r11
+.n2l:
+    cmpq %r11, (k)
+    jl .n2ldone
+    
+    movq $rocks, %r8
+    movq %r10, %rax
+    movq $12, %rcx
+    mul %rcx
+    addq %rax, %r8
+    
+    movq $rocks, %r9
+    movq %r11, %rax
+    movq $12, %rcx
+    mul %rcx
+    addq %rax, %r9
+
+    movl 4(%r8), %eax
+    cmpl %eax, 4(%r9)
+    jne .ifskipn2l
+    
+    movl $-1000, (%r8)
+
+.ifskipn2l:
+    incq %r11
+.n2ldone:
+
+    incq %r10
+
+.n1ldone:
+    movq (k), %rax
+    cmpq %rax, (rocksSize)
+    jge .rockGenerationBack
+
+afterMathSetupInitGame:
+    movq (k), %rdi
+    call setRocksSize
+
+    # setting up a bunch of random variables
+    movb $1, (g_no_render)
+    movb (g_playable), %r12b
+    movb $0, (g_playable)
+    movq $600, %r14
+.afterMathLoop:
+    call drawGame
+
+    decq %r14
+    jnz .afterMathLoop
+    
+    movb %r12b, (g_playable)
+    movb $0, (g_no_render)
+
+    movss (f0), %xmm0
+    movss %xmm0, (currentRow)
+    movss %xmm0, (targetRow)
+
+    movss (f005), %xmm0
+    movss %xmm0, (eps)
+
+    movl $12, (numberOfRowsToDraw)
+    movl $12, (horizontalResolution)
+
+    call rand
+    movq $0, %rdx
+    movl $2, %ecx
+    div %ecx
+    movl %edx, (playerDirection)
+
+    movl $3, (playerRow)
+    movl $6, (playerColumn)
+    
+    cvtsi2ss (playerRow), %xmm0
+    movss %xmm0, (playerRowF)
+
+    cvtsi2ss (playerColumn), %xmm0
+    movss %xmm0, (playerColumnF)
+
+    cmpb $1, (g_playable)
+    jne .afterMathDone
+    cmpb $0, (g_static_render)
+    jne .afterMathDone
+
+    movb $1, (g_current_score)
+    .afterMathDone:
+    
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+
+    movq %rbp, %rsp
+    popq %rbp
+
+    ret
 
