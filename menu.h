@@ -5,7 +5,7 @@
 #ifndef CROOSYROAD_MENU_H
 #define CROOSYROAD_MENU_H
 
-extern "C" int drawMenu() {
+extern "C" int drawMenu();/* {
     drawGame();
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 160, 160, 180, 190 * g_alpha / 256);
@@ -16,6 +16,9 @@ extern "C" int drawMenu() {
         sprintf(buffer, "Best score: %d", g_best_score);
         drawText(buffer, 0, 100, 100, 220);
     }
+    else {
+        drawText("Goosy Road", 0, 100, 100, 220);
+    }
 
     int nextState = 0;
     if (drawButton("Play", 4, 30, 200, 120) == 1 && g_click)
@@ -25,6 +28,6 @@ extern "C" int drawMenu() {
         nextState = 1; // exit
 
     return nextState;
-}
+}*/
 
 #endif //CROOSYROAD_MENU_H
