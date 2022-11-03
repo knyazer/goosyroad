@@ -78,21 +78,21 @@ doKeyDown:
     
     cmpq $26, %r12
     je doKeyDownW
-dkdw:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_S
     cmpq $22, %r12
     je doKeyDownS
-dkds:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_A
     cmpq $4, %r12
     je doKeyDownD
-dkdd:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_D
     cmpq $7, %r12
     je doKeyDownA
+dkdd:
+dkds:
+dkdw:
 dkda:
 
     jmp updateEventsPolling
