@@ -14,11 +14,27 @@ int sign(float x) {
 
 TTF_Font* Sans;
 
-extern "C" void drawText(const char* text, int mode, int r, int g, int b) {
+extern "C" {
+    SDL_Color makeSDLColor(int r, int g, int b) {
+        return {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b)};
+    }
+
+    void SDL_RenderFillRectw(SDL_Renderer* renderer, SDL_Rect* rect) {
+        printf("x: %d, y: %d, w: %d, h: %d", rect->x, rect->y, rect->w, rect->h);
+        SDL_RenderFillRect(renderer, rect);
+    }
+}
+
+
+
+extern "C" void drawText(const char* text, int mode, int r, int g, int b);/* {
     if ( !Sans ) {
         std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
     }
     SDL_Rect rectangle;
+
+
+    drawTextd();
 
 
     if (mode == 0 || mode == 2 || mode == 3) {
@@ -63,9 +79,11 @@ extern "C" void drawText(const char* text, int mode, int r, int g, int b) {
 
     SDL_FreeSurface(surfaceMessage);
     SDL_DestroyTexture(Message);
-}
+}*/
 
-extern "C" int drawButton(const char* text, int pos, int r, int g, int b) {
+
+
+extern "C" int drawButton(const char* text, int pos, int r, int g, int b); /*
     if ( !Sans ) {
         std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
     }
@@ -121,6 +139,6 @@ extern "C" int drawButton(const char* text, int pos, int r, int g, int b) {
     SDL_DestroyTexture(Message);
 
     return hovered;
-}
+}*/
 
 #endif //CROOSYROAD_FUNCS_H
