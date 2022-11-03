@@ -38,19 +38,24 @@ updateEventsPolling:
     cmpq $0, %rax
     je updateEventsDoneWithFalse
     
-    cmpl $256, (event)
+    call getSDL_Quit
+    cmpl %eax, (event)
     je updateEventsDoneWithTrue
-
-    cmpl $1024, (event)
+    
+    call getSDL_MouseMotion
+    cmpl %eax, (event)
     je doMouseMotion
-
-    cmpl $1025, (event)
+    
+    call getSDL_MouseButtonDown
+    cmpl %eax, (event)
     je doMouseButtonDown
-
-    cmpl $768, (event)
+    
+    call getSDL_KeyDown
+    cmpl %eax, (event)
     je doKeyDown
-
-    cmpl $769, (event)
+    
+    call getSDL_KeyUp
+    cmpl %eax, (event)
     je doKeyUp
 
     jmp updateEventsPolling

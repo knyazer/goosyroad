@@ -55,6 +55,30 @@ extern "C" {
     void createRenderer(SDL_Window* window) {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
+
+    int getSDL_Quit() {
+        return SDL_QUIT;
+    }
+
+    int getSDL_MouseMotion() {
+        return SDL_MOUSEMOTION;
+    }
+
+    int getSDL_MouseButtonUp() {
+        return SDL_MOUSEBUTTONUP;
+    }
+
+    int getSDL_MouseButtonDown() {
+        return SDL_MOUSEBUTTONDOWN;
+    }
+
+    int getSDL_KeyUp() {
+        return SDL_KEYUP;
+    }
+
+    int getSDL_KeyDown() {
+        return SDL_KEYDOWN;
+    }
 }
 
 extern "C" bool updateEvents();
