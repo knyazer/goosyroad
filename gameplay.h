@@ -115,52 +115,11 @@ extern "C" int getRectY(int i) {
     return (numberOfRowsToDraw - (i - currentRow) - 0.5) * (g_height / numberOfRowsToDraw);
 }
 
-void generateCars(int i) {
-    if (g_static_render)
-        return;
-
-    if (rand() % 150 == 0) {
-        bool dontGenerate = false;
-        float maxSpeed = 0.15;
-        float minSpeed = 0.025;
-
-        for (int j = 0; j < carsSize; j++) {
-            if (cars[j].row == i && cars[j].exist) {
-                if ((rowType[i] == ROADL && cars[j].position < 1) ||
-                    (rowType[i] == ROADR && cars[j].position > horizontalResolution - 1 - cars[j].width)) {
-                    dontGenerate = true;
-                    break;
-                }
-
-                float d;
-                if (rowType[i] == ROADL)
-                    d = 1.4 * horizontalResolution - cars[j].position;
-                else
-                    d = cars[j].position + 0.4 * horizontalResolution;
-
-
-                float t = d / cars[j].speed;
-                float v = (1.4 * horizontalResolution) / t;
-                maxSpeed = std::min(maxSpeed, v);
-            }
-        }
-
-        if (!dontGenerate) {
-            int carIndex = addCar();
-            if (carIndex == -1) {
-                std::cout << "some problems with car generator" << std::endl;
-                return;
-            }
-
-            cars[carIndex].row = i;
-            cars[carIndex].position = horizontalResolution * (rowType[i] == ROADL ? -0.4 : 1.4);
-            cars[carIndex].speed = minSpeed + (float(rand()) / float(RAND_MAX)) * (maxSpeed - minSpeed);
-            cars[carIndex].type = 0;
-            cars[carIndex].width = 1;
-            cars[carIndex].exist = true;
-        }
-    }
+extern "C" float makeCarPosition(int i) {
+return horizontalResolution * (rowType[i] == ROADL ? -0.4 : 1.4);
 }
+
+extern "C" void generateCars(int i);
 
 extern "C" int* getRowType() { return rowType; } 
 

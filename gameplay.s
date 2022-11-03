@@ -1169,3 +1169,197 @@ afterMathSetupInitGame:
 
     ret
 
+.global generateCars
+
+.data
+    f015: .float 0.15
+    f0025: .float 0.025
+    f04: .float 0.4
+    f14: .float 1.4
+    distanceAmongCars: .float 0.0
+    carPosition: .float 0.0
+    fm04: .float -0.4
+    fRAND_MAX: .float 2147483647.0
+    minSpeed: .float 0.0
+    maxSpeed: .float 0.0
+    dontGenerate: .byte 0
+
+.text
+
+generateCars:
+    cmpl $1, (g_static_render)
+    jne .firstgcifend
+    ret
+
+.firstgcifend:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    
+    movq %rdi, %r12 # r12 is the row index
+
+    call rand
+    movq $0, %rdx
+    movl $150, %ecx
+    div %ecx
+    cmpl $0, %edx
+    jne doneWithGenerateCars
+    
+    movb $0, (dontGenerate)
+    movss (f015), %xmm0
+    movss %xmm0, (maxSpeed)
+    movss (f0025), %xmm0
+    movss %xmm0, (minSpeed)
+
+    movq $0, %r14 # r14 is j
+    movq $cars, %r13 # r13 is pointer to the car
+genCarsLoop:
+    cmpl (carsSize), %r14d
+    jge doneWithgcloop
+
+    cmpl %r12d, (%r13)
+    jne .skipgcloop
+
+    cmpb $1, 20(%r13)
+    jne .skipgcloop
+    
+    # divide the execution into two parts: for rowType[i] being ROADL and ROADR
+    movq $rowType, %rcx
+    movq %r12, %rax
+    movq $4, %r8
+    mul %r8
+    addq %rax, %rcx
+
+    cmpl $1, (%rcx)
+    je .roadl_gloop
+    cmpl $2, (%rcx)
+    je .roadr_gloop
+
+    .skipgcloop:
+    incq %r14
+    addq $24, %r13
+    jmp genCarsLoop
+
+doneWithgcloop:
+    # dontgenerate is set to 1 if we want to skip this, and finish
+    cmpb $1, (dontGenerate)
+    je doneWithGenerateCars
+
+    # if we are here, we are going to generate a car
+    call addCar
+    # there is a car index in rax
+    movq $cars, %r13
+    movq $24, %r8
+    mul %r8
+    addq %rax, %r13
+    # r13 is now the pointer to the new car
+    # car row = rdi
+    movl %r12d, (%r13)
+    # car position is carPosition
+    movl %r12d, %edi
+    call makeCarPosition
+    movss %xmm0, 4(%r13)
+    # car type is random between 0 and 1
+    call rand
+    movq $0, %rdx
+    movl $1, %ecx # TODO: add more cars and chage the value here
+    div %ecx
+    movl %edx, 8(%r13)
+    # car speed is minSpeed + (rand()/RAND_MAX) * (maxSpeed - minSpeed)
+    call rand
+    cvtsi2ss %rax, %xmm0
+    divss (fRAND_MAX), %xmm0
+    movss (maxSpeed), %xmm1
+    subss (minSpeed), %xmm1
+    mulss %xmm1, %xmm0
+    addss (minSpeed), %xmm0
+    movss %xmm0, 12(%r13)
+    # car width is 1 (dependent on type, but whatever)
+    movss (f1), %xmm0
+    movss %xmm0, 16(%r13)
+    # exist is 1
+    movl $0, 20(%r13)
+    movb $1, 20(%r13)
+
+doneWithGenerateCars:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+
+    movq %rbp, %rsp
+    popq %rbp
+
+    ret
+
+.roadl_gloop:
+
+    # for left road we want to check that cars[j].position > 1
+    # and generated distance will be 1.4 * horizontalResolution - position
+    movss 4(%r13), %xmm0 # position
+    comiss (f1), %xmm0
+    jbe .setTheFlaganddone
+    
+
+    movss 4(%r13), %xmm0 # position
+    movl (horizontalResolution), %eax
+    cvtsi2ss %eax, %xmm1
+    mulss (f14), %xmm1
+    subss %xmm0, %xmm1
+    movss %xmm1, (distanceAmongCars)
+    jmp calculateMaxSpeedcl
+
+.roadr_gloop:
+
+    # carPosition = 1.4 * horizontalResolution
+    movl (horizontalResolution), %eax
+    cvtsi2ss %eax, %xmm0
+    mulss (f14), %xmm0
+    movss %xmm0, (carPosition)
+
+    # for right road we want to check that cars[j].position > horizontalResolution - 1- cars[j].width
+    # and generated distance will be cars[j].position + 0.4 * horizontalResolution
+    movss 4(%r13), %xmm0 # position
+    movl (horizontalResolution), %eax
+    cvtsi2ss %eax, %xmm1
+    subss (f1), %xmm1
+    subss 16(%r13), %xmm1
+    comiss %xmm0, %xmm1
+    jbe .setTheFlaganddone
+
+    # distanceAmongCars = position + 0.4 * horizontalResolution
+    movss 4(%r13), %xmm0 # position
+    movl (horizontalResolution), %eax
+    cvtsi2ss %eax, %xmm1
+    mulss (f04), %xmm1
+    addss %xmm0, %xmm1
+    movss %xmm1, (distanceAmongCars)
+    jmp calculateMaxSpeedcl
+
+.setTheFlaganddone:
+    movb $1, (dontGenerate)
+    jmp doneWithgcloop
+
+calculateMaxSpeedcl:
+    # xmm0 = distanceAmongCars / cars[j].speed
+    movss (distanceAmongCars), %xmm0
+    movss 12(%r13), %xmm1
+    divss %xmm1, %xmm0
+
+    # xmm0 = (1.4 * horizontalResolution) / xmm0
+    movl (horizontalResolution), %eax
+    cvtsi2ss %eax, %xmm1
+    mulss (f14), %xmm1
+    divss %xmm0, %xmm1
+    movss %xmm1, %xmm0
+
+    # maxSpeed = min(maxSpeed, xmm0)
+    movss (maxSpeed), %xmm1
+    minss %xmm0, %xmm1
+    movss %xmm1, (maxSpeed)
+    
+    jmp .skipgcloop
