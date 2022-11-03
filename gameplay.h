@@ -108,7 +108,12 @@ extern "C" int getCarY(int i, int h) { return (numberOfRowsToDraw - (cars[i].row
 extern "C" int getCarsRowType(int i) { return rowType[cars[i].row]; }
 extern "C" SDL_Texture* getCarTextureR(int i) { return carTexturesR[cars[i].type]; }
 extern "C" SDL_Texture* getCarTextureL(int i) { return carTexturesL[cars[i].type]; }
-
+extern "C" int getGPlayable() { return g_playable; }
+extern "C" float getPlayerRowF() { return playerRowF; }
+extern "C" float getPlayerColumnF() { return playerColumnF; }
+extern "C" int getPlayerRow() { return playerRow; }
+extern "C" int getPlayerColumn() { return playerColumn; }
+extern "C" float getFloatCurrentRow() { return currentRow; }
 extern "C" void drawCar(int i);
 
 extern "C" int getRectY(int i) {
@@ -125,7 +130,7 @@ extern "C" int* getRowType() { return rowType; }
 
 extern "C" void updateCar(int i);
 
-void cleanupCars() {
+extern "C" void cleanupCars() {
     for (int j = 0; j < carsSize; j++) {
         if (cars[j].exist)
             if (cars[j].position < -0.5 * horizontalResolution
@@ -157,65 +162,15 @@ extern "C" void updateComplemenetaryFilters() {
 
 extern "C" void renderPlayer(float x, float y, int state);
 
+extern "C" bool getComplexAndCondition(int i) {
+    return cars[i].exist && abs(float(cars[i].row) - playerRowF) < 0.25 &&
+            cars[i].position < playerColumnF &&
+            playerColumnF < cars[i].position + cars[i].width;
+}
+
 extern "C" bool cameraAndPlayerUpdate();
 
-extern "C" int drawGame() {
-    if (!g_no_render) {
-        SDL_SetRenderDrawColor(renderer, 87, 148, 105, g_alpha);
-        SDL_RenderFillRect(renderer, &g_screen);
-    }
-
-    bool blocked = cameraAndPlayerUpdate();
-
-    int l = currentRow - 1, h = currentRow + numberOfRowsToDraw + 2;
-    for (int i = h; i > l; i--) {
-        if (rowType[i] == SAVE)
-            renderSave(i);
-
-        if (rowType[i] == ROADL || rowType[i] == ROADR) {
-            renderRoad(i);
-        }
-    }
-
-    drawCars(l, h);
-    drawRocks(l, h);
-
-    for (int i = currentRow + numberOfRowsToDraw * 3 + 2; i > currentRow - 1; i--) {
-        if (rowType[i] == ROADL || rowType[i] == ROADR) {
-            generateCars(i);
-            updateCar(i);
-        }
-    }
-
-    cleanupCars();
-
-    if (g_playable)
-        renderPlayer(playerRowF, playerColumnF, blocked ? 1 : 0);
-
-    if (g_playable && !g_no_render) {
-        g_current_score = std::max(g_current_score, playerRow - 2);
-
-        char buffer[30];
-        sprintf(buffer, "%d", g_current_score);
-        drawText(buffer, 1, 219, 167, 11);
-    }
-
-
-    for (int i = 0; i < carsSize; i++) {
-        if (cars[i].exist && abs(float(cars[i].row) - playerRowF) < 0.25 &&
-            cars[i].position < playerColumnF &&
-            playerColumnF < cars[i].position + cars[i].width)
-            return 1;
-    }
-
-    if (playerRowF < currentRow - 0.75)
-        return 1;
-
-    if (playerRow >= 999)
-        return 1;
-
-    return 0;
-}
+extern "C" int drawGame();
 
 extern "C" void initGame();
 extern "C" void firstInitOfGame();
