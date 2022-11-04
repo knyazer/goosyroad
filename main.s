@@ -249,6 +249,7 @@ main:
 
     call firstInitOfGame
 
+    movl $1, (state)
     movb $0, (quit)
 mainLoop:
     cmpb $0, (quit)
@@ -385,4 +386,3 @@ scoreToMenu:
     movl $1, (g_post)
     call setupTransition
     jmp mainLoopIfDone
-

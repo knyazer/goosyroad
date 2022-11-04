@@ -7,35 +7,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-const int TRANSITION = 0;
-const int MENU = 1;
-const int GAMEPLAY = 2;
-const int SCORE = 3;
-
-bool g_no_render = false;
-bool g_static_render = false;
-bool g_playable = false;
-
-int g_post = 0, g_prev = 0;
-int g_current_score = 0, g_best_score = 0;
-int g_prev_score = 0, state = MENU;
-
-int g_alpha = 255;
-
-int g_width = 1000, g_height = 1000;
-int g_mouse_x = 0, g_mouse_y = 0;
-bool g_click = false, g_left = false, g_right = false, g_forward = false, g_backward = false;
-SDL_Rect g_screen;
-
-SDL_Renderer* renderer;
-
-#include "gameplay.h"
-#include "funcs.h"
-#include "menu.h"
-#include "transition.h"
-#include "score.h"
-
 extern "C" {
+    SDL_Color makeSDLColor(int r, int g, int b) {
+        return {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b)};
+    }
+
     int getMotionX(SDL_Event* event) {
         return event->motion.x;
     }
@@ -46,14 +22,6 @@ extern "C" {
 
     int getScancode(SDL_Event* event) {
         return event->key.keysym.scancode;
-    }
-
-    void setRenderer(SDL_Renderer* r) {
-        renderer = r;
-    }
-
-    void createRenderer(SDL_Window* window) {
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
 
     int getSDL_Quit() {

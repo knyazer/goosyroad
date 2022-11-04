@@ -536,3 +536,324 @@ setGStaticRender:
 setGPlayable:
     movb %dil, (g_playable)
     ret
+
+.global getRowType
+
+getRowType:
+    movq $rowType, %rax
+    ret
+
+.global cfPart
+
+cfPart:
+    # cfPart(int* a, float * b)
+    # if (*a > *b + eps) 
+    # *b += eps;
+    
+    movl (%rdi), %eax
+    cvtsi2ss %eax, %xmm0
+    movss (%rsi), %xmm1
+    movss (eps), %xmm2
+    addss %xmm2, %xmm1
+    ucomiss %xmm1, %xmm0
+    ja cfpart1
+
+    # if (*a < *b - eps)
+    # *b -= eps;
+    movss (eps), %xmm2
+    subss %xmm2, %xmm1
+    ucomiss %xmm1, %xmm0
+    jb cfpart2
+
+    ret
+
+cfpart1:
+    movss %xmm1, (%rsi)
+    ret
+
+cfpart2:
+    movss (eps), %xmm0
+    subss %xmm0, %xmm1
+    movss %xmm1, (%rsi)
+    ret
+
+.global updateComplemenetaryFilters
+
+.data
+f3: .float 3.0
+f005: .float 0.05
+f0005: .float 0.005
+f98: .float 0.98
+f02: .float 0.02
+
+.text
+updateComplemenetaryFilters:
+    # cfPart(&playerRow, &playerRowF)
+    movq $playerRow, %rdi
+    movq $playerRowF, %rsi
+    call cfPart
+    # cfPart(&playerColumn, &playerColumnF)
+    movq $playerColumn, %rdi
+    movq $playerColumnF, %rsi
+    call cfPart
+
+    # if (!g_no_render && playerRowF > (currentRow + 3))
+    #       functionCall();
+    movb (g_no_render), %al
+    test %al, %al
+    jne ucf1
+
+    movss (playerRowF), %xmm0
+    movss (currentRow), %xmm1
+    movss (f3), %xmm2
+    addss %xmm2, %xmm1
+    ucomiss %xmm1, %xmm0
+    ja updatecomplemenetaryfilters2
+    jmp ucf1
+
+updatecomplemenetaryfilters2:
+    # targetRow += 0.05 * ((playerRowF - currentRow - 3) / numberOfRowsToDraw);
+    movss (playerRowF), %xmm0
+    movss (currentRow), %xmm1
+    movss (f3), %xmm2
+    addss %xmm2, %xmm1
+    subss %xmm1, %xmm0
+    cvtsi2ss (numberOfRowsToDraw), %xmm1
+    divss %xmm1, %xmm0
+    movss (f005), %xmm1
+    mulss %xmm1, %xmm0
+    movss (targetRow), %xmm1
+    addss %xmm1, %xmm0
+    movss %xmm0, (targetRow)
+
+ucf1:
+    # if (!g_no_render)
+    #    targetRow += 0.005
+    movb (g_no_render), %al
+    test %al, %al
+    jne ucf2
+    
+    movss (targetRow), %xmm0
+    movss (f0005), %xmm1
+    addss %xmm1, %xmm0
+    movss %xmm0, (targetRow)
+    
+ucf2:
+    # currentRow = 0.98 * currentRow + 0.02 * targetRow;
+    movss (currentRow), %xmm0
+    movss (f98), %xmm1
+    mulss %xmm1, %xmm0
+    movss (targetRow), %xmm1
+    movss (f02), %xmm2
+    mulss %xmm2, %xmm1
+    addss %xmm1, %xmm0
+    movss %xmm0, (currentRow)
+
+    ret
+
+.global getComplexAndCondition
+
+.data
+fm25: .float -0.25
+f25: .float 0.25
+.text
+
+.global gcac1
+
+gcac1:
+    movq $cars, %r8
+    movq $0, %rax
+    movl %edi, %eax
+    movq $24, %rdx
+    mul %rdx
+    addq %r8, %rax
+    movq %rax, %r8
+    
+    # if 20(%r8) == 1 -> return 1
+    # else return 0
+    movb 20(%r8), %al
+    test %al, %al
+    jne gcac1_second
+    movq $0, %rax
+    ret
+
+gcac1_second:
+    movq $1, %rax
+    ret
+
+
+.global gcac3
+
+gcac3:
+    movq $cars, %r8
+    movq $0, %rax
+    movl %edi, %eax
+    movq $24, %rdx
+    mul %rdx
+    addq %r8, %rax
+    movq %rax, %r8
+
+    # if float(4(%r8)) < playerColumnF -> return 1
+    # else return 0
+    movss 4(%r8), %xmm0
+    movss (playerColumnF), %xmm1
+    ucomiss %xmm1, %xmm0
+    jb gcac3_second
+    movq $0, %rax
+    ret
+
+gcac3_second:
+    movq $1, %rax
+    ret
+
+.global gcac4
+
+gcac4:
+    movq $cars, %r8
+    movq $0, %rax
+    movl %edi, %eax
+    movq $24, %rdx
+    mul %rdx
+    addq %r8, %rax
+    movq %rax, %r8
+    
+    # if float(4(%r8)) + float(16(%r8)) > playerColumnF -> return 1
+    # else return 0
+    movss 4(%r8), %xmm0
+    movss 16(%r8), %xmm1
+    addss %xmm1, %xmm0
+    movss (playerColumnF), %xmm1
+    ucomiss %xmm1, %xmm0
+    ja gcac4_second
+    movq $0, %rax
+    ret
+
+gcac4_second:
+    movq $1, %rax
+    ret
+
+.global gcac21
+
+gcac21:
+    movq $cars, %r8
+    movq $0, %rax
+    movl %edi, %eax
+    movq $24, %rdx
+    mul %rdx
+    addq %r8, %rax
+    movq %rax, %r8
+    
+    # if float((%r8)) < playerRowF + 0.25 -> return 1
+    # else return 0
+
+    cvtsi2ssl (%r8), %xmm0
+    movss (playerRowF), %xmm1
+    movss (f25), %xmm2
+    addss %xmm2, %xmm1
+    ucomiss %xmm1, %xmm0
+    jb gcac21_second
+    movq $0, %rax
+    ret
+
+gcac21_second:
+    movq $1, %rax
+    ret
+
+.global gcac22
+
+gcac22:
+    movq $cars, %r8
+    movq $0, %rax
+    movl %edi, %eax
+    movq $24, %rdx
+    mul %rdx
+    addq %r8, %rax
+    movq %rax, %r8
+    
+    # if float((%r8)) > playerRowF - 0.25 -> return 1
+    # else return 0
+
+    cvtsi2ssl (%r8), %xmm0
+    movss (playerRowF), %xmm1
+    movss (fm25), %xmm2
+    addss %xmm2, %xmm1
+    ucomiss %xmm1, %xmm0
+    ja gcac22_second
+    movq $0, %rax
+    ret
+
+gcac22_second:
+    movq $1, %rax
+    ret
+
+.global gcac2
+
+gcac2:
+    pushq %r12
+    movq $0, %r12
+
+    call gcac21
+    addq %rax, %r12
+    call gcac22
+    addq %rax, %r12
+
+    cmpq $2, %r12
+    jne gcac2_second
+    movq $1, %rax
+    popq %r12
+    ret
+
+gcac2_second:
+    movq $0, %rax
+    popq %r12
+    ret
+
+
+.global getComplexAndCondition
+
+getComplexAndCondition:
+    pushq %r12
+    movq $0, %r12
+
+    call gcac1
+    addq %rax, %r12
+    call gcac2
+    addq %rax, %r12
+    call gcac3
+    addq %rax, %r12
+    call gcac4
+    addq %rax, %r12
+
+    cmpq $4, %r12
+    jne getComplexAndCondition_second
+    movq $1, %rax
+    popq %r12
+    ret
+
+getComplexAndCondition_second:
+    movq $0, %rax
+    popq %r12
+    ret
+
+.global setRenderer
+
+setRenderer:
+    movq %rdi, (renderer)
+    ret
+
+.global createRenderer
+
+createRenderer:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    movl $-1, %esi
+    movl $2, %edx
+    call SDL_CreateRenderer
+    movq %rax, (renderer)
+
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+
