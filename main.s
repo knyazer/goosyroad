@@ -63,11 +63,11 @@ updateEventsPolling:
 doMouseMotion:
     movq $event, %rdi
     call getMotionX
-    movq %rax, (g_mouse_x)
+    movl %eax, (g_mouse_x)
 
     movq $event, %rdi
     call getMotionY
-    movq %rax, (g_mouse_y)
+    movl %eax, (g_mouse_y)
 
     jmp updateEventsPolling
 
@@ -79,21 +79,21 @@ doKeyDown:
     # check that event.key.keysym.scabcode is SDL_SCANCODE_W
     movq $event, %rdi
     call getScancode
-    movq %rax, %r12
+    movl %eax, %r12d
     
-    cmpq $26, %r12
+    cmpl $26, %r12d
     je doKeyDownW
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_S
-    cmpq $22, %r12
+    cmpl $22, %r12d
     je doKeyDownS
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_A
-    cmpq $4, %r12
+    cmpl $4, %r12d
     je doKeyDownD
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_D
-    cmpq $7, %r12
+    cmpl $7, %r12d
     je doKeyDownA
 dkdd:
 dkds:
@@ -136,26 +136,26 @@ doKeyDownD:
 
 doKeyUp:
     # check that event.key.keysym.scabcode is SDL_SCANCODE_W
-    movq $event, %rdi
+    movl $event, %edi
     call getScancode
-    movq %rax, %r12
+    movl %eax, %r12d
 
-    cmpq $26, %r12
+    cmpl $26, %r12d
     je doKeyUpW
 dkuw:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_S
-    cmpq $22, %r12
+    cmpl $22, %r12d
     je doKeyUpS
 dkus:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_A
-    cmpq $4, %r12
+    cmpl $4, %r12d
     je doKeyUpD
 dkud:
 
     # check that event.key.keysym.scabcode is SDL_SCANCODE_D
-    cmpq $7, %r12
+    cmpl $7, %r12d
     je doKeyUpA
 dkua:
 
