@@ -35,7 +35,7 @@ updateEventsPolling:
     movq $event, %rdi
     call SDL_PollEvent
 
-    cmpq $0, %rax
+    cmpl $0, %eax
     je updateEventsDoneWithFalse
     
     call getSDL_Quit
@@ -199,7 +199,10 @@ updateEventsDone:
 
 .bss
     win: .skip 8
-    quit: .skip 1
+.data
+    asdfasdfasdf: .quad 0
+    quit: .byte 0
+    kljsdljk: .quad 0
 
 .text
     fontpath: .asciz "pixelfont.ttf"
@@ -252,8 +255,8 @@ main:
     movl $1, (state)
     movb $0, (quit)
 mainLoop:
-    cmpb $0, (quit)
-    jne mainDone
+    cmpb $0, quit
+    jnz mainDone
 
     call getRenderer
     movq %rax, %rdi
