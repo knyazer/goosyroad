@@ -856,4 +856,76 @@ createRenderer:
     popq %rbp
     ret
 
+.global getSDL_Quit
 
+getSDL_Quit:
+    movq $256, %rax
+    ret
+
+.global getSDL_MouseMotion
+
+getSDL_MouseMotion:
+    movq $1024, %rax
+    ret
+
+.global getSDL_MouseButtonUp
+    
+getSDL_MouseButtonUp:
+    movq $1026, %rax
+    ret
+
+.global getSDL_MouseButtonDown
+
+getSDL_MouseButtonDown:
+    movq $1025, %rax
+    ret
+
+.global getSDL_KeyUp
+
+getSDL_KeyUp:
+    movq $769, %rax
+    ret
+
+.global getSDL_KeyDown
+
+getSDL_KeyDown:
+    movq $768, %rax
+    ret
+
+.global makeSDLColor
+
+makeSDLColor:
+	pushq	%rbp
+	movq	%rsp, %rbp
+
+	subq	$16, %rsp
+	movq $0, %rax
+	movl	%edi, %eax
+	movb	%al, -12(%rbp)
+	movl	%esi, %eax
+	movb	%al, -11(%rbp)
+	movl	%edx, %eax
+	movb	%al, -10(%rbp)
+	movl	-12(%rbp), %eax
+
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+.global getMotionX
+
+getMotionX:
+    movl 20(%rdi), %eax
+    ret
+
+.global getMotionY
+
+getMotionY:
+    movl 24(%rdi), %eax
+    ret
+
+.global getScancode
+
+getScancode:
+    movl 16(%rdi), %eax
+    ret
