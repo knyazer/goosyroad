@@ -1,7 +1,7 @@
 .data
 
 decimal: .asciz "%d"
-threeQuarters: .float 0,75
+threeQuarters: .float 0.75
 
 .text
     // Defining consts
@@ -254,9 +254,8 @@ drawGameReturnCarLoopContinue:
     movq    %rax, %r12
     call    getFloatCurrentRow
     movss   %xmm0, %xmm1
-    movq    threeQuarters, %r14
     cvtsi2ss %r12, %xmm0 # playerRow
-    cvtsi2ss %r14, %xmm2 # threeQuarters
+    movss (threeQuarters), %xmm2 # threeQuarters
 
     subss   %xmm2, %xmm1 # currentRow - 0.75
     comiss  %xmm0, %xmm1
