@@ -54,8 +54,8 @@ ___: .quad 0
 .bss
 Sans: .skip 8
 rowType: .skip 4000
-carTexturesR: .skip 8
-carTexturesL: .skip 8
+carTexturesR: .skip 24
+carTexturesL: .skip 24
 rockTextures: .skip 48
 roadTexture: .skip 8
 cars: .skip 2400

@@ -1078,6 +1078,10 @@ pherob: .asciz "res/herob.png"
 pheroba: .asciz "res/heroba.png"
 pcar1: .asciz "res/car1.png"
 pcar1a: .asciz "res/car1a.png"
+pcar2: .asciz "res/car2.png"
+pcar2a: .asciz "res/car2a.png"
+pcar3: .asciz "res/car3.png"
+pcar3a: .asciz "res/car3a.png"
 pstone1: .asciz "res/stone1.png"
 pstone2: .asciz "res/stone2.png"
 pstone3: .asciz "res/stone3.png"
@@ -1126,6 +1130,30 @@ firstInitOfGame:
     movq $pcar1a, %rsi
     call IMG_LoadTexture
     movq %rax, (carTexturesR)
+    
+    movq %r12, %rdi
+    movq $pcar2, %rsi
+    call IMG_LoadTexture
+    movq $carTexturesL, %rdi
+    movq %rax, 8(%rdi)
+
+    movq %r12, %rdi
+    movq $pcar2a, %rsi
+    call IMG_LoadTexture
+    movq $carTexturesR, %rdi
+    movq %rax, 8(%rdi)
+    
+    movq %r12, %rdi
+    movq $pcar3, %rsi
+    call IMG_LoadTexture
+    movq $carTexturesL, %rdi
+    movq %rax, 16(%rdi)
+
+    movq %r12, %rdi
+    movq $pcar3a, %rsi
+    call IMG_LoadTexture
+    movq $carTexturesR, %rdi
+    movq %rax, 16(%rdi)
     
     movq $rockTextures, %r13
     movq %r12, %rdi
@@ -1530,7 +1558,7 @@ doneWithgcloop:
     # car type is random between 0 and 1
     call rand
     movq $0, %rdx
-    movl $1, %ecx # TODO: add more cars and chage the value here
+    movl $3, %ecx # TODO: add more cars and chage the value here
     div %ecx
     movl %edx, 8(%r13)
     # car speed is minSpeed + (rand()/RAND_MAX) * (maxSpeed - minSpeed)
